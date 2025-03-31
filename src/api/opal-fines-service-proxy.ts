@@ -1,0 +1,20 @@
+import config from 'config';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+export default () => {
+  return createProxyMiddleware({
+    target: config.get('opal-api.opal-fines-service'),
+    changeOrigin: true,
+    logger: console,
+    on: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      proxyReq: (proxyReq, req: any) => {
+        if (req.session.securityToken) {
+          if (req.session.securityToken.access_token) {
+            proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
+          }
+        }
+      },
+    },
+  });
+};
