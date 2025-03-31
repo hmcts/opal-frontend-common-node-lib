@@ -6,9 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": " yarn clean && tsc",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
