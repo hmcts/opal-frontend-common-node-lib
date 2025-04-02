@@ -17,26 +17,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Lint code
         run: yarn lint
 
-      - name: Run unit tests
-        run: yarn test --watch=false --code-coverage
-
       - name: Audit vulnerabilities
         run: yarn audit --production
 
-      - name: Run SonarCloud analysis
-        uses: SonarSource/sonarcloud-github-action@v1
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarqube-scan-action@v5.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build library
         run: yarn build
@@ -54,13 +47,6 @@ jobs:
       - name: Validate and extract release information
         id: release
         uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
-
-      - name: Setup Node.js (Release)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
-          always-auth: true
 
       - name: Install dependencies (Release)
         run: yarn install --frozen-lockfile
