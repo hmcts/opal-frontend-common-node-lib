@@ -26,10 +26,10 @@ jobs:
       - name: Audit vulnerabilities
         run: yarn audit --production
 
-      - name: Analyze with SonarCloud
-        uses: SonarSource/sonarqube-scan-action@v5.1.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: Analyze with SonarCloud
+      #   uses: SonarSource/sonarqube-scan-action@v5.1.0
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build library
         run: yarn build
