@@ -1,4 +1,3 @@
-/// <reference path="./global.d.ts" />
 export * from './launch-darkly';
 export * from './app-insights';
 export * from './health';
