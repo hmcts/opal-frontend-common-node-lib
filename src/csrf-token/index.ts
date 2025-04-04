@@ -14,7 +14,7 @@ export class CSRFToken {
         path: '/',
       },
       getTokenFromRequest: (req) => {
-        return req.cookies[cookieName].split('|')[0] || null;
+        return req.cookies[cookieName].split('|')[0] ?? null;
       },
     });
 

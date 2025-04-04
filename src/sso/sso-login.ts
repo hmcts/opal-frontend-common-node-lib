@@ -11,9 +11,6 @@ export default async (
 ) => {
   const INTERNAL_USER_LOGIN = `${opalApiUrl}/internal-user/login-or-refresh`;
   const logger = Logger.getLogger('login');
-
-  // const env = process.env['NODE_ENV'] || 'development';
-  // const hostname = env === 'development' ? config.get('frontend-hostname.dev') : config.get('frontend-hostname.prod');
   const url = `${INTERNAL_USER_LOGIN}?redirect_uri=${frontendHostname}/sso/login-callback`;
 
   try {
