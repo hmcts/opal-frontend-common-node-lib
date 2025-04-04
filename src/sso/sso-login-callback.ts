@@ -1,12 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
 import axios from 'axios';
-import config from 'config';
 
-const INTERNAL_USER_CALLBACK = `${config.get('opal-api.url')}/internal-user/handle-oauth-code`;
-const logger = Logger.getLogger('login-callback');
+export default async (req: Request, res: Response, next: NextFunction, opalApiUrl: string) => {
+  const INTERNAL_USER_CALLBACK = `${opalApiUrl}/internal-user/handle-oauth-code`;
+  const logger = Logger.getLogger('login-callback');
 
-export default async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await axios.post<any>(INTERNAL_USER_CALLBACK, req.body, {

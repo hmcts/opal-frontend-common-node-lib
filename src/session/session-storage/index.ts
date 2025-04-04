@@ -1,5 +1,5 @@
 import { Logger } from '@hmcts/nodejs-logging';
-import config from 'config';
+import SessionStorageConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-storage-config';
 import { RedisStore } from 'connect-redis';
 import cookieParser from 'cookie-parser';
 import { Application } from 'express';
@@ -11,34 +11,34 @@ const FileStore = FileStoreFactory(session);
 const logger = Logger.getLogger('session-storage');
 
 export default class SessionStorage {
-  public enableFor(app: Application): void {
-    app.use(cookieParser(config.get('secrets.opal.opal-frontend-cookie-secret')));
+  public enableFor(app: Application, sessionStorage: SessionStorageConfiguration): void {
+    app.use(cookieParser(sessionStorage.secret));
     app.set('trust proxy', 1);
 
     app.use(
       session({
-        name: config.get('session.prefix'),
+        name: sessionStorage.prefix,
         resave: false,
         saveUninitialized: false,
-        secret: config.get('secrets.opal.opal-frontend-session-secret'),
+        secret: sessionStorage.secret,
         cookie: {
           httpOnly: true,
-          maxAge: config.get('session.maxAge'),
-          sameSite: config.get('session.sameSite'),
-          secure: config.get('session.secure'),
-          domain: config.get('session.domain'),
+          maxAge: sessionStorage.maxAge,
+          sameSite: sessionStorage.sameSite,
+          secure: sessionStorage.secure,
+          domain: sessionStorage.domain,
         },
         rolling: true,
-        store: this.getStore(app),
+        store: this.getStore(app, sessionStorage.redisEnabled, sessionStorage.redisConnectionString),
       }),
     );
   }
 
-  private getStore(app: Application) {
-    if (config.get('features.redis.enabled')) {
-      logger.info('Using Redis session store', config.get('secrets.opal.redis-connection-string'));
+  private getStore(app: Application, enabled: boolean, connectionString: string | null) {
+    if (enabled && connectionString) {
+      logger.info('Using Redis session store', connectionString);
       const client = createClient({
-        url: config.get('secrets.opal.redis-connection-string'),
+        url: connectionString,
         socket: {
           reconnectStrategy: function (retries) {
             if (retries > 20) {

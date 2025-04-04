@@ -1,6 +1,5 @@
 import * as express from 'express';
 import helmet from 'helmet';
-import config from 'config';
 import { Logger } from '@hmcts/nodejs-logging';
 
 const logger = Logger.getLogger('helmet');
@@ -18,8 +17,8 @@ export class Helmet {
     this.developmentMode = developmentMode;
   }
 
-  public enableFor(app: express.Express): void {
-    if (config.get('features.helmet.enabled') === true) {
+  public enableFor(app: express.Express, enabled: boolean): void {
+    if (enabled) {
       logger.info('Helmet enabled');
       // include default helmet functions
       const scriptSrc = [

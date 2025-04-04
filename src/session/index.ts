@@ -1,5 +1,5 @@
 import SessionStorage from './session-storage';
-import userState from './user-state';
-import expiry from './expiry';
+import sessionExpiry from './session-expiry';
+import sessionUserState from './session-user-state';
 
-export { SessionStorage, userState, expiry };
+export { SessionStorage, sessionUserState, sessionExpiry };

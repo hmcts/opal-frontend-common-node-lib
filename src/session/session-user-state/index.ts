@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { UserState } from '../interfaces';
-import { Jwt } from '../utils';
+import { UserState } from '../../interfaces';
+import { Jwt } from '../../utils';
 
-export default (req: Request, res: Response) => {
+const sessionUserState = (req: Request, res: Response) => {
   const userState: UserState | undefined = req.session.securityToken?.user_state;
   const accessToken = req.session.securityToken?.access_token;
   const name = accessToken && userState ? Jwt.parseJwt(accessToken).name : '';
@@ -20,3 +20,5 @@ export default (req: Request, res: Response) => {
     res.send({ ...userState, name });
   }
 };
+
+export default sessionUserState;

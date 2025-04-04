@@ -14,10 +14,62 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "declaration": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
     "moduleResolution": "node",
-    "typeRoots": ["node_modules/@types"]
+    "typeRoots": ["node_modules/@types"],
+    "paths": {
+      "@hmcts/opal-frontend-common-node": [
+        "./src/index.ts",
+      ],
+      "@hmcts/opal-frontend-common-node/launch-darkly/*": [
+        "./src/launch-darkly/*",
+      ],
+      "@hmcts/opal-frontend-common-node/app-insights/*": [
+        "./src/app-insights/*",
+      ],
+      "@hmcts/opal-frontend-common-node/interfaces/*": [
+        "./src/interfaces/*",
+      ],
+      "@hmcts/opal-frontend-common-node/health/*": [
+        "./src/health/*",
+      ],
+      "@hmcts/opal-frontend-common-node/helmet/*": [
+        "./src/helmet/*",
+      ],
+      "@hmcts/opal-frontend-common-node/properties-volume/*": [
+        "./src/properties-volume/*",
+      ],
+      "@hmcts/opal-frontend-common-node/csrf-token/*": [
+        "./src/csrf-token/*",
+      ],
+      "@hmcts/opal-frontend-common-node/proxy/*": [
+        "./src/proxy/*",
+      ],
+      "@hmcts/opal-frontend-common-node/proxy/opal-api/*": [
+        "./src/proxy/opal-api/*",
+      ],
+      "@hmcts/opal-frontend-common-node/proxy/opal-fines-service/*": [
+        "./src/proxy/opal-fines-service/*",
+      ],
+      "@hmcts/opal-frontend-common-node/routes/*": [
+        "./src/routes/*",
+      ],
+      "@hmcts/opal-frontend-common-node/session/*": [
+        "./src/session/*",
+      ],
+      "@hmcts/opal-frontend-common-node/session/session-expiry/*": [
+        "./src/session/session-expiry/*",
+      ],
+      "@hmcts/opal-frontend-common-node/session/session-user-state/*": [
+        "./src/session/session-user-state/*",
+      ],
+      "@hmcts/opal-frontend-common-node/session/session-storage/*": [
+        "./src/session/session-storage/*",
+      ],
+    }
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "src/**/*.spec.ts"]
+  "include": ["src", "src/index.ts"],
+  "exclude": ["node_modules", "dist", "src/**/*.spec.ts"]
 }

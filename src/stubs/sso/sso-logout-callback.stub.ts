@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
-import config from 'config';
 
-export default (req: Request, res: Response, next: NextFunction) => {
+export default (req: Request, res: Response, next: NextFunction, prefix: string) => {
   const logger = Logger.getLogger('logout-callback-stub');
 
   req.session.destroy((err) => {
@@ -11,7 +10,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
       return next(err);
     }
 
-    res.clearCookie(config.get('session.prefix'));
+    res.clearCookie(prefix);
     res.redirect('/');
   });
 };

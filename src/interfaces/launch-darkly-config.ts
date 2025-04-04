@@ -1,7 +1,7 @@
-class launchDarklyConfig {
+class LaunchDarklyConfig {
   enabled!: boolean;
   clientId!: string | null;
   stream!: boolean;
 }
 
-export default launchDarklyConfig;
+export default LaunchDarklyConfig;

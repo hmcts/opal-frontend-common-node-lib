@@ -4,9 +4,8 @@
   "description": "Common nodejs library components for opal",
   "main": "dist/index",
   "types": "dist/index.d.ts",
-  "type": "module",
   "scripts": {
-    "build": " yarn clean && tsc",
+    "build": " yarn clean && tsc && cp package.json dist/ && cp src/*.d.ts dist/",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
@@ -52,5 +51,75 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.28.0"
+  },
+  "packageManager": "yarn@1.22.22",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    }, 
+    "./app-insights": {
+      "import": "./app-insights/index.js",
+      "types": "./app-insights/index.d.ts"
+    },
+    "./health": {
+      "import": "./health/index.js",
+      "types": "./health/index.d.ts"
+    },
+    "./helmet": {
+      "import": "./helmet/index.js",
+      "types": "./helmet/index.d.ts"
+    },
+    "./launch-darkly": {
+      "import": "./launch-darkly/index.js",
+      "types": "./launch-darkly/index.d.ts"
+    },
+    "./properties-volume": {
+      "import": "./properties-volume/index.js",
+      "types": "./properties-volume/index.d.ts"
+    },
+    "./csrf-token": {
+      "import": "./csrf-token/index.js",
+      "types": "./csrf-token/index.d.ts"
+    },
+    "./routes": {
+      "import": "./routes/index.js",
+      "types": "./routes/index.d.ts"
+    },
+    "./interfaces": {
+      "import": "./interfaces/index.js",
+      "types": "./interfaces/index.d.ts"
+    },
+    "./session": {
+      "import": "./session/index.js",
+      "types": "./session/index.d.ts"
+    },
+    "./session/session-storage": {
+      "import": "./session/session-storage/index.js",
+      "types": "./session/session-storage/index.d.ts"
+    },
+    "./session/session-expiry": {
+      "import": "./session/session-expiry/index.js",
+      "types": "./session/session-expiry/index.d.ts"
+    },
+    "./session/session-user-state": {
+      "import": "./session/session-user-state/index.js",
+      "types": "./session/session-user-state/index.d.ts"
+    },
+    "./proxy": {
+      "import": "./proxy/index.js",
+      "types": "./proxy/index.d.ts"
+    },
+    "./proxy/opal-api": {
+      "import": "./proxy/opal-api/index.js",
+      "types": "./proxy/opal-api/index.d.ts"
+    },
+    "./proxy/opal-fines-service": {
+      "import": "./proxy/opal-fines-service/index.js",
+      "types": "./proxy/opal-fines-service/index.d.ts"
+    },
+    "./types": {
+      "types": "./global.d.ts"
+    }
   }
 }

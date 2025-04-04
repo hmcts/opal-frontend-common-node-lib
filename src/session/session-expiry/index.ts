@@ -1,17 +1,16 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
-import config from 'config';
-import { Jwt } from '../utils';
+import { Jwt } from '../../utils';
 
-export default (req: Request, res: Response) => {
+const sessionExpiry = (
+  req: Request,
+  res: Response,
+  testMode: boolean,
+  expiryTimeInMilliseconds: number,
+  warningThresholdInMilliseconds: number,
+) => {
   const accessToken = req.session.securityToken?.access_token;
   if (accessToken) {
-    const testMode = config.get<boolean>('expiry.testMode');
-    const expiryConfigPath = testMode ? 'expiry.test' : 'expiry.default';
-
-    const expiryTimeInMilliseconds = config.get<number>(`${expiryConfigPath}.expiryTimeInMilliseconds`);
-    const warningThresholdInMilliseconds = config.get<number>(`${expiryConfigPath}.warningThresholdInMilliseconds`);
-
     const payload = Jwt.parseJwt(accessToken);
     const jwtExpiry = testMode
       ? DateTime.now().plus({ milliseconds: expiryTimeInMilliseconds }).toISO()
@@ -28,3 +27,5 @@ export default (req: Request, res: Response) => {
     });
   }
 };
+
+export default sessionExpiry;

@@ -1,11 +1,12 @@
 import * as propertiesVolume from '@hmcts/properties-volume';
-import config from 'config';
+import { IConfig } from 'config';
 import { Application } from 'express';
 
 export class PropertiesVolume {
-  enableFor(server: Application): void {
+  enableFor(server: Application, config: IConfig): IConfig {
     if (server.locals['ENV'] !== 'development') {
       propertiesVolume.addTo(config);
     }
+    return config;
   }
 }
