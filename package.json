@@ -12,45 +12,38 @@
     "prettier:fix": "prettier --write \"./src/**/*.{ts,js,json}\""
   },
   "dependencies": {
-    "@hmcts/info-provider": "^1.2.3",
+    "@hmcts/info-provider": "^1.1.0",
     "@hmcts/nodejs-healthcheck": "^1.8.5",
     "@hmcts/nodejs-logging": "^4.0.4",
-    "@hmcts/properties-volume": "^1.2.0",
-    "applicationinsights": "^3.6.0",
-    "axios": "^1.8.4",
-    "body-parser": "^2.2.0",
-    "config": "^3.3.12",
-    "connect-redis": "^8.0.2",
-    "cookie-parser": "^1.4.7",
-    "csrf-csrf": "^3.1.0",
-    "eslint": "^9.23.0",
-    "express": "^5.1.0",
-    "express-session": "^1.18.1",
-    "helmet": "^8.1.0",
-    "http-proxy-middleware": "^3.0.3",
-    "luxon": "^3.6.0",
-    "prettier": "^3.5.3",
-    "redis": "^4.7.0",
+    "@hmcts/properties-volume": "^1.1.0",
+    "applicationinsights": "~2.9.6",
+    "axios": "^1.6.2",
+    "body-parser": "^2.0.0",
+    "config": "^3.3.9",
+    "connect-redis": "^8.0.0",
+    "cookie-parser": "^1.4.6",
+    "csrf-csrf": "^3.0.6",
+    "express": "^4.15.2",
+    "express-session": "^1.17.3",
+    "helmet": "^8.0.0",
+    "http-proxy-middleware": "^3.0.0",
+    "luxon": "^3.4.3",
+    "prettier": "^3.0.3",
+    "redis": "^4.6.11",
     "session-file-store": "^1.5.0",
-    "typescript": "^5.8.2",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "@types/config": "^3.3.5",
-    "@types/cookie-parser": "^1.4.8",
-    "@types/express": "^5.0.1",
+    "@types/config": "^3.3.3",
+    "@types/cookie-parser": "^1.4.6",
+    "@types/express": "^5.0.0",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "@types/session-file-store": "^1.2.5",
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.5",
-    "prettier": "^3.5.3",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.28.0"
+    "@typescript-eslint/eslint-plugin": "8.29.1",
+    "@typescript-eslint/parser": "8.29.1",
+    "eslint": "^9.0.0",
+    "typescript": "~5.8.0"
   },
   "packageManager": "yarn@1.22.22",
   "exports": {
@@ -110,13 +103,9 @@
       "import": "./proxy/index.js",
       "types": "./proxy/index.d.ts"
     },
-    "./proxy/opal-api": {
-      "import": "./proxy/opal-api/index.js",
-      "types": "./proxy/opal-api/index.d.ts"
-    },
-    "./proxy/opal-fines-service": {
-      "import": "./proxy/opal-fines-service/index.js",
-      "types": "./proxy/opal-fines-service/index.d.ts"
+    "./proxy/opal-api-proxy": {
+      "import": "./proxy/opal-api-proxy/index.js",
+      "types": "./proxy/opal-api-proxy/index.d.ts"
     },
     "./types": {
       "types": "./global.d.ts"

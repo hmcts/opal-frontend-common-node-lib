@@ -1,8 +1,8 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
-const opalFinesServiceProxy = (opalFinesServiceTarget: string) => {
+const opalApiProxy = (opalApiTarget: string) => {
   return createProxyMiddleware({
-    target: opalFinesServiceTarget,
+    target: opalApiTarget,
     changeOrigin: true,
     logger: console,
     on: {
@@ -16,4 +16,4 @@ const opalFinesServiceProxy = (opalFinesServiceTarget: string) => {
   });
 };
 
-export default opalFinesServiceProxy;
+export default opalApiProxy;

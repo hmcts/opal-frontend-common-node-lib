@@ -47,11 +47,8 @@
       "@hmcts/opal-frontend-common-node/proxy/*": [
         "./src/proxy/*",
       ],
-      "@hmcts/opal-frontend-common-node/proxy/opal-api/*": [
-        "./src/proxy/opal-api/*",
-      ],
-      "@hmcts/opal-frontend-common-node/proxy/opal-fines-service/*": [
-        "./src/proxy/opal-fines-service/*",
+      "@hmcts/opal-frontend-common-node/proxy/opal-api-proxy/*": [
+        "./src/proxy/opal-api-proxy/*",
       ],
       "@hmcts/opal-frontend-common-node/routes/*": [
         "./src/routes/*",

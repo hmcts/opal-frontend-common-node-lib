@@ -1,2 +1,1 @@
-export * from './opal-api';
-export * from './opal-fines-service';
+export * from './opal-api-proxy'

@@ -11,12 +11,14 @@ import {
   ssoLogoutStub,
   ssoLogoutCallbackStub,
 } from '../stubs/sso';
-import opalFinesServiceProxy from '@hmcts/opal-frontend-common-node/proxy/opal-fines-service';
-import opalApiProxy from '@hmcts/opal-frontend-common-node/proxy/opal-api';
+import opalApiProxy from '@hmcts/opal-frontend-common-node/proxy/opal-api-proxy';
 import sessionExpiry from '@hmcts/opal-frontend-common-node/session/session-expiry';
 import sessionUserState from '@hmcts/opal-frontend-common-node/session/session-user-state';
 import ExpiryConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-expiry-config';
 import RoutesConfiguration from '@hmcts/opal-frontend-common-node/interfaces/routes-config';
+import ProxyConfiguration from '@hmcts/opal-frontend-common-node/interfaces/proxy-config';
+import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-config';
+import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
 
 export class Routes {
   public enableFor(
@@ -24,9 +26,12 @@ export class Routes {
     ssoEnabled: boolean,
     expiryConfiguration: ExpiryConfiguration,
     routesConfiguration: RoutesConfiguration,
+    sessionConfiguration: SessionConfiguration,
+    proxyConfiguration: ProxyConfiguration,
+    ssoConfiguration: SsoConfiguration,
   ): void {
-    app.use('/api', opalApiProxy(routesConfiguration.opalApiTarget));
-    app.use('/opal-fines-service', opalFinesServiceProxy(routesConfiguration.opalFinesServiceTarget));
+    app.use(proxyConfiguration.opalApiProxyUrl, opalApiProxy(routesConfiguration.opalApiTarget));
+    app.use(proxyConfiguration.opalFinesServiceProxyUrl, opalApiProxy(routesConfiguration.opalFinesServiceTarget));
 
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
@@ -38,10 +43,11 @@ export class Routes {
       routesConfiguration.opalApiTarget,
       routesConfiguration.frontendHostname,
       routesConfiguration.prefix,
+      ssoConfiguration,
     );
 
-    app.get('/session/user-state', (req: Request, res: Response) => sessionUserState(req, res));
-    app.get('/session/expiry', (req: Request, res: Response) =>
+    app.get(sessionConfiguration.userStateUrl, (req: Request, res: Response) => sessionUserState(req, res));
+    app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
       sessionExpiry(
         req,
         res,
@@ -58,6 +64,7 @@ export class Routes {
     opalApiUrl: string,
     frontendHostname: string,
     prefix: string,
+    ssoConfiguration: SsoConfiguration,
   ): void {
     const login = ssoEnabled ? ssoLogin : ssoLoginStub;
     const loginCallback = ssoEnabled ? ssoLoginCallback : ssoLoginCallbackStub;
@@ -67,11 +74,11 @@ export class Routes {
 
     const loginCallbackType = ssoEnabled ? 'post' : 'get';
 
-    app.get('/sso/login', (req: Request, res: Response, next: NextFunction) =>
+    app.get(ssoConfiguration.login, (req: Request, res: Response, next: NextFunction) =>
       login(req, res, next, opalApiUrl, frontendHostname),
     );
 
-    const routePath = '/sso/login-callback';
+    const routePath = ssoConfiguration.loginCallback;
     const callbackHandler = (req: Request, res: Response, next: NextFunction) =>
       loginCallback(req, res, next, opalApiUrl);
 
@@ -81,12 +88,12 @@ export class Routes {
       app.get(routePath, callbackHandler);
     }
 
-    app.get('/sso/logout', (req: Request, res: Response, next: NextFunction) =>
+    app.get(ssoConfiguration.logout, (req: Request, res: Response, next: NextFunction) =>
       logout(req, res, next, opalApiUrl, frontendHostname),
     );
-    app.get('/sso/logout-callback', (req: Request, res: Response, next: NextFunction) =>
+    app.get(ssoConfiguration.logoutCallback, (req: Request, res: Response, next: NextFunction) =>
       logoutCallback(req, res, next, prefix),
     );
-    app.get('/sso/authenticated', (req: Request, res: Response) => authenticated(req, res));
+    app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => authenticated(req, res));
   }
 }
