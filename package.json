@@ -1,5 +1,6 @@
 {
   "name": "@hmcts/opal-frontend-common-node-lib",
+  "type": "module",
   "version": "0.0.1",
   "description": "Common nodejs library components for opal",
   "main": "dist/index",
@@ -43,14 +44,16 @@
     "@typescript-eslint/eslint-plugin": "8.29.1",
     "@typescript-eslint/parser": "8.29.1",
     "eslint": "^9.0.0",
-    "typescript": "~5.8.0"
+    "eslint-plugin-prettier": "^5.2.6",
+    "typescript": "~5.8.0",
+    "typescript-eslint": "^8.30.1"
   },
   "packageManager": "yarn@1.22.22",
   "exports": {
     ".": {
       "import": "./index.js",
       "types": "./index.d.ts"
-    }, 
+    },
     "./app-insights": {
       "import": "./app-insights/index.js",
       "types": "./app-insights/index.d.ts"

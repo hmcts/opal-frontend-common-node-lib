@@ -21,5 +21,5 @@ export {
   RoutesConfiguration,
   ProxyConfiguration,
   SsoConfiguration,
-  SessionConfiguration
+  SessionConfiguration,
 };
