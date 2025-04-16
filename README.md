@@ -96,14 +96,14 @@ Refer to the `exports` block in `package.json` for the full list of available mo
 Install the published package using:
 
 ```bash
-yarn add @hmcts/opal-frontend-common-node-lib
+yarn add @hmcts/opal-frontend-common-node
 ```
 
 If consuming from a local build:
 
 ```bash
-yarn remove @hmcts/opal-frontend-common-node-lib
-yarn add @hmcts/opal-frontend-common-node-lib@file:../opal-frontend-common-node-lib/dist
+yarn remove @hmcts/opal-frontend-common-node
+yarn add @hmcts/opal-frontend-common-node@file:../opal-frontend-common-node-lib/dist
 ```
 
 Ensure paths reflect your actual local setup when using the `file:` specifier.

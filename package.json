@@ -1,7 +1,7 @@
 {
-  "name": "@hmcts/opal-frontend-common-node-lib",
+  "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Common nodejs library components for opal",
   "main": "dist/index",
   "types": "dist/index.d.ts",
