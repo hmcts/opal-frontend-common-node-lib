@@ -1,12 +1,12 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Common nodejs library components for opal",
   "main": "dist/index",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": " yarn clean && tsc && cp package.json dist/ && cp src/*.d.ts dist/",
+    "build": " yarn clean && tsc && cp package.json dist/ && cp src/*.d.ts dist/ && cp README.md dist/",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
