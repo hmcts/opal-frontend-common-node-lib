@@ -6,7 +6,6 @@ import TransferServerState from './transfer-server-state';
 import ExpiryConfiguration from './session-expiry-config';
 import SessionStorageConfiguration from './session-storage-config';
 import RoutesConfiguration from './routes-config';
-import ProxyConfiguration from './proxy-config';
 import SsoConfiguration from './sso-config';
 import SessionConfiguration from './session-config';
 
@@ -19,7 +18,6 @@ export {
   ExpiryConfiguration,
   SessionStorageConfiguration,
   RoutesConfiguration,
-  ProxyConfiguration,
   SsoConfiguration,
   SessionConfiguration,
 };

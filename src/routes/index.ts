@@ -1,8 +1,6 @@
 import { Application } from 'express';
 import bodyParser from 'body-parser';
-
 import type { NextFunction, Request, Response } from 'express';
-
 import { ssoAuthenticated, ssoLoginCallback, ssoLogin, ssoLogout, ssoLogoutCallback } from '../sso';
 import {
   ssoLoginStub,
@@ -11,12 +9,10 @@ import {
   ssoLogoutStub,
   ssoLogoutCallbackStub,
 } from '../stubs/sso';
-import opalApiProxy from '@hmcts/opal-frontend-common-node/proxy/opal-api-proxy';
 import sessionExpiry from '@hmcts/opal-frontend-common-node/session/session-expiry';
 import sessionUserState from '@hmcts/opal-frontend-common-node/session/session-user-state';
 import ExpiryConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-expiry-config';
 import RoutesConfiguration from '@hmcts/opal-frontend-common-node/interfaces/routes-config';
-import ProxyConfiguration from '@hmcts/opal-frontend-common-node/interfaces/proxy-config';
 import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-config';
 import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
 
@@ -27,12 +23,8 @@ export class Routes {
     expiryConfiguration: ExpiryConfiguration,
     routesConfiguration: RoutesConfiguration,
     sessionConfiguration: SessionConfiguration,
-    proxyConfiguration: ProxyConfiguration,
     ssoConfiguration: SsoConfiguration,
   ): void {
-    app.use(proxyConfiguration.opalApiProxyUrl, opalApiProxy(routesConfiguration.opalApiTarget));
-    app.use(proxyConfiguration.opalFinesServiceProxyUrl, opalApiProxy(routesConfiguration.opalFinesServiceTarget));
-
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
