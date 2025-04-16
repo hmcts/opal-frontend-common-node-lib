@@ -1,0 +1,117 @@
+{
+  "name": "@hmcts/opal-frontend-common-node-lib",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Common nodejs library components for opal",
+  "main": "dist/index",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": " yarn clean && tsc && cp package.json dist/ && cp src/*.d.ts dist/",
+    "clean": "rm -rf dist",
+    "lint": "eslint ./src --ext .ts && yarn prettier",
+    "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
+    "prettier:fix": "prettier --write \"./src/**/*.{ts,js,json}\""
+  },
+  "dependencies": {
+    "@hmcts/info-provider": "^1.1.0",
+    "@hmcts/nodejs-healthcheck": "^1.8.5",
+    "@hmcts/nodejs-logging": "^4.0.4",
+    "@hmcts/properties-volume": "^1.1.0",
+    "applicationinsights": "~2.9.6",
+    "axios": "^1.6.2",
+    "body-parser": "^2.0.0",
+    "config": "^3.3.9",
+    "connect-redis": "^8.0.0",
+    "cookie-parser": "^1.4.6",
+    "csrf-csrf": "^3.0.6",
+    "express": "^4.15.2",
+    "express-session": "^1.17.3",
+    "helmet": "^8.0.0",
+    "http-proxy-middleware": "^3.0.0",
+    "luxon": "^3.4.3",
+    "prettier": "^3.0.3",
+    "redis": "^4.6.11",
+    "session-file-store": "^1.5.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/config": "^3.3.3",
+    "@types/cookie-parser": "^1.4.6",
+    "@types/express": "^5.0.0",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^22.0.0",
+    "@types/session-file-store": "^1.2.5",
+    "@typescript-eslint/eslint-plugin": "8.29.1",
+    "@typescript-eslint/parser": "8.29.1",
+    "eslint": "^9.0.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "typescript": "~5.8.0",
+    "typescript-eslint": "^8.30.1"
+  },
+  "packageManager": "yarn@1.22.22",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./app-insights": {
+      "import": "./app-insights/index.js",
+      "types": "./app-insights/index.d.ts"
+    },
+    "./health": {
+      "import": "./health/index.js",
+      "types": "./health/index.d.ts"
+    },
+    "./helmet": {
+      "import": "./helmet/index.js",
+      "types": "./helmet/index.d.ts"
+    },
+    "./launch-darkly": {
+      "import": "./launch-darkly/index.js",
+      "types": "./launch-darkly/index.d.ts"
+    },
+    "./properties-volume": {
+      "import": "./properties-volume/index.js",
+      "types": "./properties-volume/index.d.ts"
+    },
+    "./csrf-token": {
+      "import": "./csrf-token/index.js",
+      "types": "./csrf-token/index.d.ts"
+    },
+    "./routes": {
+      "import": "./routes/index.js",
+      "types": "./routes/index.d.ts"
+    },
+    "./interfaces": {
+      "import": "./interfaces/index.js",
+      "types": "./interfaces/index.d.ts"
+    },
+    "./session": {
+      "import": "./session/index.js",
+      "types": "./session/index.d.ts"
+    },
+    "./session/session-storage": {
+      "import": "./session/session-storage/index.js",
+      "types": "./session/session-storage/index.d.ts"
+    },
+    "./session/session-expiry": {
+      "import": "./session/session-expiry/index.js",
+      "types": "./session/session-expiry/index.d.ts"
+    },
+    "./session/session-user-state": {
+      "import": "./session/session-user-state/index.js",
+      "types": "./session/session-user-state/index.d.ts"
+    },
+    "./proxy": {
+      "import": "./proxy/index.js",
+      "types": "./proxy/index.d.ts"
+    },
+    "./proxy/opal-api-proxy": {
+      "import": "./proxy/opal-api-proxy/index.js",
+      "types": "./proxy/opal-api-proxy/index.d.ts"
+    },
+    "./types": {
+      "types": "./global.d.ts"
+    }
+  }
+}

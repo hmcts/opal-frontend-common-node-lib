@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "HMCTS",
+        "projectKey": "hmcts_opal-frontend-common-node-lib"
+    }
+}

@@ -1,0 +1,60 @@
+name: Angular Library CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+
+jobs:
+  ci:
+    name: Build, Test, and Analyse
+    if: github.event_name != 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: yarn lint
+
+      - name: Audit vulnerabilities
+        run: yarn audit --production
+
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarqube-scan-action@v5.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Build library
+        run: yarn build
+
+  release:
+    name: Release and Publish
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (Release)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish }}
+
+      - name: Validate and extract release information
+        id: release
+        uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
+
+      - name: Install dependencies (Release)
+        run: yarn install --frozen-lockfile
+
+      - name: Build library (Release)
+        run: yarn build
+
+      - name: Publish version
+        run: yarn publish --new-version ${{ steps.release.outputs.version }} --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_api_token }}
