@@ -64,4 +64,4 @@ jobs:
       - name: Publish version
         run: yarn publish --new-version ${{ steps.release.outputs.version }} --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          NODE_AUTH_TOKEN: ${{ secrets.npm_api_token }}
