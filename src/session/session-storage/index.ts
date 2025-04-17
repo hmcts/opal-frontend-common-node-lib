@@ -34,8 +34,8 @@ export default class SessionStorage {
     );
   }
 
-  private getStore(app: Application, enabled: boolean, connectionString: string | null) {
-    if (enabled && connectionString) {
+  private getStore(app: Application, enabled: boolean, connectionString: string) {
+    if (enabled) {
       logger.info('Using Redis session store', connectionString);
       const client = createClient({
         url: connectionString,
