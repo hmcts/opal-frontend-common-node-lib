@@ -1,7 +1,6 @@
 process.env['APPLICATIONINSIGHTS_CONFIGURATION_CONTENT'] = '{}';
 import * as appInsights from 'applicationinsights';
 import AppInsightConfig from '../interfaces/app-insights-config';
-import AppInsightsConfiguration from './app-insights-configuration';
 
 // As of 2.9.0 issue reading bundled applicationinsights.json
 // https://github.com/microsoft/ApplicationInsights-node.js/issues/1226
@@ -9,9 +8,6 @@ import AppInsightsConfiguration from './app-insights-configuration';
 
 export class AppInsights {
   enable(enabled: boolean, connectionString: string | null, cloudRoleName: string | null): AppInsightConfig {
-    const appInsightsConfigInstance = new AppInsightsConfiguration();
-    const appInsightsConfig = appInsightsConfigInstance.enableFor(enabled, connectionString, cloudRoleName);
-
     if (enabled && connectionString) {
       appInsights
         .setup(connectionString)
@@ -34,6 +30,6 @@ export class AppInsights {
       });
     }
 
-    return appInsightsConfig;
+    return { enabled, connectionString, cloudRoleName };
   }
 }
