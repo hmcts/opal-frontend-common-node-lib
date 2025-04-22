@@ -974,9 +974,9 @@ config@^3.3.9:
     json5 "^2.2.3"
 
 connect-redis@^8.0.0:
-  version "8.0.2"
-  resolved "https://registry.yarnpkg.com/connect-redis/-/connect-redis-8.0.2.tgz#02166c024329285cf128abc5b11d533db83812c5"
-  integrity sha512-8A6rNOkwLQf25kkERnutNRppE3WUJ7B2bTl/DKf0jW9PkhzJQ3+VJYDHsN+NIuTtQrWsQr5n5UX7bm9l8rkTtQ==
+  version "8.0.3"
+  resolved "https://registry.yarnpkg.com/connect-redis/-/connect-redis-8.0.3.tgz#ff82a9f810b3baf3966a5284c66ce92cef892020"
+  integrity sha512-wLIaRv5csDWZsODD/X1vzfF9YKAYVfjJfzxsR6er0jqikM+i4GuBv06kgB8/O3QJWj5ANhYRoym/j1rL459v7g==
 
 content-disposition@0.5.4:
   version "0.5.4"
