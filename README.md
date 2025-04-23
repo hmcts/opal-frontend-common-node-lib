@@ -13,6 +13,7 @@ This is a shared Node.js library containing common middleware, configurations, a
 - [Linting and Formatting](#linting-and-formatting)
 - [Exports](#exports)
 - [Using This Library in a Node.js Application](#using-this-library-in-a-nodejs-application)
+- [Switching Between Local and Published Versions](#switching-between-local-and-published-versions)
 
 ## Getting Started
 
@@ -29,25 +30,6 @@ Ensure you have the following installed:
 yarn
 ```
 
-## Scripts
-
-The following commands are available in the `package.json`:
-
-- `yarn build`  
-  Cleans the `dist/` folder, compiles TypeScript, and copies relevant files to `dist/`.
-
-- `yarn clean`  
-  Removes the `dist/` directory.
-
-- `yarn lint`  
-  Runs ESLint across the `src/` directory and checks formatting using Prettier.
-
-- `yarn prettier`  
-  Checks if files are formatted correctly.
-
-- `yarn prettier:fix`  
-  Automatically formats the codebase.
-
 ## Build Process
 
 Run the following to build the project:
@@ -57,6 +39,61 @@ yarn build
 ```
 
 The compiled output will be available in the `dist/` folder. It includes `index.js`, type declarations, and any exported modules listed in the `exports` field.
+
+## Switching Between Local and Published Versions
+
+See [opal-frontend](https://github.com/hmcts/opal-frontend) for how this library is consumed in practice.
+
+Use the `yarn import:local:common-node-lib` and `yarn import:published:common-node-lib` scripts in your consuming project (`opal-frontend`) to switch between local development and the published npm version of the library.
+
+To use a published version of this library during development in another project:
+1. In the consuming project, run:
+    ```bash
+    yarn import:published:common-node-lib
+    ```
+
+To use a local version of this library during development in another project:
+
+1. Build this library:
+    ```bash
+    yarn build
+    ```
+
+2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to the local build:
+
+    ```bash
+    # In your shell config file (.zshrc, .bash_profile, or .bashrc)
+    export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB DIST FOLDER]"
+    ```
+
+3. In the consuming project (e.g. `opal-frontend`), run:
+    ```bash
+    yarn import:local:common-node-lib
+    ```
+
+    This will remove the published version and install the local build using the path provided.
+
+4. To switch back to the published version:
+    ```bash
+    yarn import:published:common-node-lib
+    ```
+
+This setup makes it easy to switch between development and production versions of the shared library.
+
+## Publish the library
+
+Once any changes have been approved and merged into the main branch, you'll need to publish a new version of the library so that it can be consumed by other projects. To do this:
+
+1. Increment the version number in both the library's root `package.json`.
+2. Commit and push those changes to the main branch.
+3. On GitHub, create a new [release](https://github.com/hmcts/opal-frontend-common-node-lib/releases) and use the updated version number as a tag.
+4. When the release workflow completes, the library will be published.
+
+After this new version of the library is published, any consuming application should remove the local or outdated version of the library and then install the published version by running:
+
+    ```bash
+    yarn import:published:common-node-lib
+    ```
 
 ## Linting and Formatting
 
@@ -91,19 +128,21 @@ import {
 
 Refer to the `exports` block in `package.json` for the full list of available modules.
 
-## Using This Library in a Node.js Application
+## Commonly Used Commands
 
-Install the published package using:
+The following commands are available in the `package.json`:
 
-```bash
-yarn add @hmcts/opal-frontend-common-node
-```
+- `yarn build`  
+  Cleans the `dist/` folder, compiles TypeScript, and copies relevant files to `dist/`.
 
-If consuming from a local build:
+- `yarn clean`  
+  Removes the `dist/` directory.
 
-```bash
-yarn remove @hmcts/opal-frontend-common-node
-yarn add @hmcts/opal-frontend-common-node@file:../opal-frontend-common-node-lib/dist
-```
+- `yarn lint`  
+  Runs ESLint across the `src/` directory and checks formatting using Prettier.
 
-Ensure paths reflect your actual local setup when using the `file:` specifier.
+- `yarn prettier`  
+  Checks if files are formatted correctly.
+
+- `yarn prettier:fix`  
+  Automatically formats the codebase.
