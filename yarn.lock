@@ -1054,9 +1054,9 @@ cross-spawn@^7.0.6:
     which "^2.0.1"
 
 csrf-csrf@^3.0.6:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/csrf-csrf/-/csrf-csrf-3.2.1.tgz#de8e6e834f0b9b328075928de648607fe15756ad"
-  integrity sha512-PIAU0RKs9+c1hEY4PKLLiHe4eEXLWwaVv/5KPWqRiP2Of3zC/HjacbciTDF/oryRDm+QiH6TFj/asNJtc0LcNg==
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/csrf-csrf/-/csrf-csrf-3.2.2.tgz#6c5139d7689be9bb77b3e5c9eb3ec3aa4678c3ee"
+  integrity sha512-E3TgLWX1e+jqigDva+nFItfqa59UZ+gLR56DVNyL/xawBGwQr8o3U4/o1gP9FZmIWLnWCiIl5ni85MghMCNRfg==
   dependencies:
     http-errors "^2.0.0"
 
