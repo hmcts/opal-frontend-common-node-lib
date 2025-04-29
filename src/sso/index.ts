@@ -1,7 +1,7 @@
 import ssoLogin from './sso-login';
 import ssoLogout from './sso-logout';
 import ssoLoginCallback from './sso-login-callback';
-import ssoLogoutCallback from './sso-logout-callback';
 import ssoAuthenticated from './sso-authenticated';
+import ssoConfig from './sso-configuration';
 
-export { ssoLogin, ssoLoginCallback, ssoLogout, ssoAuthenticated, ssoLogoutCallback };
+export { ssoLogin, ssoLoginCallback, ssoLogout, ssoAuthenticated, ssoConfig };

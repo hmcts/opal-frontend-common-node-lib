@@ -1,41 +1,19 @@
-import axios from 'axios';
-import { NextFunction, Request, Response } from 'express';
+import { Response } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
 
-export default async (
-  req: Request,
+export default async function ssoLogout(
   res: Response,
-  next: NextFunction,
-  opalApiUrl: string,
-  frontendHostname: string,
-) => {
-  const INTERNAL_USER_LOGOUT = `${opalApiUrl}/internal-user/logout`;
-  const logger = Logger.getLogger('login');
-  const url = `${INTERNAL_USER_LOGOUT}?redirect_uri=${frontendHostname}/sso/logout-callback`;
+  microsoftUrlWithTenantId: string,
+  ssoLogoutCallback: string,
+): Promise<void> {
+  const logger = Logger.getLogger('sso-logout');
 
   try {
-    let accessToken;
+    const azureLogoutUrl = `${microsoftUrlWithTenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${ssoLogoutCallback}`;
 
-    if (req.session.securityToken) {
-      accessToken = req.session.securityToken.access_token;
-    }
-
-    if (!accessToken) {
-      return next(new Error('No access token found in session'));
-    }
-
-    const response = await axios.get(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    const logoutRedirect = response.request.res.responseUrl;
-    if (logoutRedirect) {
-      res.redirect(logoutRedirect);
-    } else {
-      next(new Error('Error trying to fetch logout page'));
-    }
+    res.redirect(azureLogoutUrl);
   } catch (error) {
-    logger.error('Error logging out', error);
-    return next(error);
+    logger.error('Error on SSO Logout:', error);
+    res.status(500).send('Logout failed');
   }
-};
+}

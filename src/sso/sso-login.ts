@@ -1,31 +1,25 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
-import axios from 'axios';
+import { ConfidentialClientApplication } from '@azure/msal-node';
 
 export default async (
-  req: Request,
   res: Response,
   next: NextFunction,
-  opalApiUrl: string,
+  msalInstance: ConfidentialClientApplication,
   frontendHostname: string,
+  ssoLoginCallback: string,
 ) => {
-  const INTERNAL_USER_LOGIN = `${opalApiUrl}/internal-user/login-or-refresh`;
-  const logger = Logger.getLogger('login');
-  const url = `${INTERNAL_USER_LOGIN}?redirect_uri=${frontendHostname}/sso/login-callback`;
-
+  const logger = Logger.getLogger('sso-login');
   try {
-    const response = await axios.get(url);
-    const redirectUrl = response.request.res.responseUrl;
+    const authCodeUrl = await msalInstance.getAuthCodeUrl({
+      scopes: ['user.read'],
+      redirectUri: `${frontendHostname}${ssoLoginCallback}`,
+      responseMode: 'form_post',
+    });
 
-    if (redirectUrl) {
-      res.redirect(redirectUrl);
-    } else {
-      const error = new Error('Error trying to fetch login page');
-      logger.error('Error on login', error);
-      return next(error);
-    }
+    res.redirect(authCodeUrl);
   } catch (error) {
-    logger.error('Error on login', error);
-    return next(error);
+    logger.error('Error on SSO Login:', error);
+    next(error);
   }
 };

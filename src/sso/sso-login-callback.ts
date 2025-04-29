@@ -1,30 +1,55 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
+import { ConfidentialClientApplication } from '@azure/msal-node';
+import 'express-session';
+import { SecurityToken } from '../interfaces';
 import { Logger } from '@hmcts/nodejs-logging';
-import axios from 'axios';
 
-export default async (req: Request, res: Response, next: NextFunction, opalApiUrl: string) => {
-  const INTERNAL_USER_CALLBACK = `${opalApiUrl}/internal-user/handle-oauth-code`;
-  const logger = Logger.getLogger('login-callback');
+interface CustomIdTokenClaims {
+  preferred_username?: string;
+  [key: string]: unknown;
+}
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await axios.post<any>(INTERNAL_USER_CALLBACK, req.body, {
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    });
+export default async (
+  req: Request,
+  res: Response,
+  msalInstance: ConfidentialClientApplication,
+  frontendHostname: string,
+  ssoLoginCallback: string,
+) => {
+  const logger = Logger.getLogger('sso-login-callback');
 
-    const securityToken = result.data;
-    req.session.securityToken = securityToken;
+  const tokenRequest = {
+    code: req.body['code'] as string,
+    scopes: ['user.read'],
+    redirectUri: `${frontendHostname}${ssoLoginCallback}`,
+    enableSpaAuthorizationCode: true,
+  };
 
-    req.session.save((err) => {
-      if (err) {
-        logger.error('Error saving session', err);
-        return next(err);
+  msalInstance
+    .acquireTokenByCode(tokenRequest)
+    .then((response) => {
+      if (!response || !response.idTokenClaims) {
+        throw new Error('Invalid token response.');
       }
 
-      res.redirect('/');
+      const idTokenClaims = response.idTokenClaims as CustomIdTokenClaims;
+
+      const securityToken: SecurityToken = {
+        user_state: {
+          user_id: idTokenClaims.preferred_username ?? '',
+          user_name: idTokenClaims.preferred_username ?? '',
+          business_unit_user: [],
+        },
+        access_token: response.accessToken,
+      };
+
+      // Save important parts to session
+      req.session.securityToken = securityToken;
+
+      res.redirect(frontendHostname);
+    })
+    .catch((error) => {
+      logger.error('Error on SSO Login Callback:', error);
+      res.status(500).send(error);
     });
-  } catch (error) {
-    logger.error('Error on login-callback', error);
-    return next(error);
-  }
 };
