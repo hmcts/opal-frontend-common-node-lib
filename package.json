@@ -24,7 +24,7 @@
     "config": "^3.3.9",
     "connect-redis": "^8.0.0",
     "cookie-parser": "^1.4.6",
-    "csrf-csrf": "^3.0.6",
+    "csrf-csrf": "^4.0.0",
     "express": "^5.0.0",
     "express-session": "^1.17.3",
     "helmet": "^8.0.0",
