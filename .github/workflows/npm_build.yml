@@ -23,8 +23,8 @@ jobs:
       - name: Lint code
         run: yarn lint
 
-      - name: Audit vulnerabilities
-        run: yarn audit --production
+      - name: Audit vulnerabilities (known issues check)
+        run: yarn audit:check
 
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarqube-scan-action@v5.2.0
