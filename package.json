@@ -11,7 +11,9 @@
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
-    "prettier:fix": "prettier --write \"./src/**/*.{ts,js,json}\""
+    "prettier:fix": "prettier --write \"./src/**/*.{ts,js,json}\"",
+    "audit:save": "yarn audit --recursive --environment production --json > yarn-known-issues || true",
+    "audit:check": "yarn audit --recursive --environment production --json > yarn-known-issues-current || true && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues-current > current-ids.json && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues > known-ids.json && diff -q known-ids.json current-ids.json || (echo '❌ New vulnerabilities detected. Please review.' && exit 1)"
   },
   "dependencies": {
     "@hmcts/info-provider": "^1.1.0",
