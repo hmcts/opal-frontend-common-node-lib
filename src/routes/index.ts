@@ -17,39 +17,6 @@ import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-co
 import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
 
 export class Routes {
-  public enableFor(
-    app: Application,
-    ssoEnabled: boolean,
-    expiryConfiguration: ExpiryConfiguration,
-    routesConfiguration: RoutesConfiguration,
-    sessionConfiguration: SessionConfiguration,
-    ssoConfiguration: SsoConfiguration,
-  ): void {
-    // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }));
-
-    this.setupSSORoutes(
-      app,
-      ssoEnabled,
-      routesConfiguration.opalApiTarget,
-      routesConfiguration.frontendHostname,
-      routesConfiguration.prefix,
-      ssoConfiguration,
-    );
-
-    app.get(sessionConfiguration.userStateUrl, (req: Request, res: Response) => sessionUserState(req, res));
-    app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
-      sessionExpiry(
-        req,
-        res,
-        expiryConfiguration.testMode,
-        expiryConfiguration.expiryTimeInMilliseconds,
-        expiryConfiguration.warningThresholdInMilliseconds,
-      ),
-    );
-  }
-
   private setupSSORoutes(
     app: Application,
     ssoEnabled: boolean,
@@ -87,5 +54,38 @@ export class Routes {
       logoutCallback(req, res, next, prefix),
     );
     app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => authenticated(req, res));
+  }
+
+  public enableFor(
+    app: Application,
+    ssoEnabled: boolean,
+    expiryConfiguration: ExpiryConfiguration,
+    routesConfiguration: RoutesConfiguration,
+    sessionConfiguration: SessionConfiguration,
+    ssoConfiguration: SsoConfiguration,
+  ): void {
+    // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: false }));
+
+    this.setupSSORoutes(
+      app,
+      ssoEnabled,
+      routesConfiguration.opalApiTarget,
+      routesConfiguration.frontendHostname,
+      routesConfiguration.prefix,
+      ssoConfiguration,
+    );
+
+    app.get(sessionConfiguration.userStateUrl, (req: Request, res: Response) => sessionUserState(req, res));
+    app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
+      sessionExpiry(
+        req,
+        res,
+        expiryConfiguration.testMode,
+        expiryConfiguration.expiryTimeInMilliseconds,
+        expiryConfiguration.warningThresholdInMilliseconds,
+      ),
+    );
   }
 }
