@@ -23,11 +23,11 @@ jobs:
       - name: Lint code
         run: yarn lint
 
-      - name: Audit vulnerabilities
-        run: yarn audit --production
+      - name: Audit vulnerabilities (known issues check)
+        run: yarn audit:check
 
       - name: Analyze with SonarCloud
-        uses: SonarSource/sonarqube-scan-action@v5.1.0
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
