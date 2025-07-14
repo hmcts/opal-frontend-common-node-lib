@@ -1,5 +1,5 @@
 import { doubleCsrf } from 'csrf-csrf';
-import { Application, Request } from 'express';
+import { Application } from 'express';
 
 export class CSRFToken {
   public enableFor(app: Application, secret: string, cookieName: string, sameSite: boolean, secure: boolean): void {
@@ -13,9 +13,8 @@ export class CSRFToken {
         secure: secure,
         path: '/',
       },
-      getTokenFromRequest: (req) => {
-        return req.cookies[cookieName].split('|')[0] ?? null;
-      },
+      getSessionIdentifier: (req) => req.session.id,
+      getCsrfTokenFromRequest: (req) => req.cookies[cookieName].split('|')[0] ?? null,
     });
 
     app.use((req, res, next) => {
@@ -26,9 +25,9 @@ export class CSRFToken {
       }
     });
 
-    app.use((req: Request, res, next) => {
+    app.use((req, res, next) => {
       if (req.csrfToken) {
-        req.csrfToken(true);
+        req.csrfToken({ overwrite: true, validateOnReuse: true });
       }
       next();
     });
