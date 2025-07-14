@@ -1,4 +1,5 @@
 # OPAL Frontend Common Node Library
+
 [![npm version](https://img.shields.io/npm/v/@hmcts/opal-frontend-common-node)](https://www.npmjs.com/package/@hmcts/opal-frontend-common-node)
 [![License](https://img.shields.io/npm/l/@hmcts/opal-frontend-common-node)](https://github.com/hmcts/opal-frontend-common-node-lib/blob/main/LICENSE)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hmcts_opal-frontend-common-node-lib&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=hmcts_opal-frontend-common-node-lib)
@@ -47,36 +48,39 @@ See [opal-frontend](https://github.com/hmcts/opal-frontend) for how this library
 Use the `yarn import:local:common-node-lib` and `yarn import:published:common-node-lib` scripts in your consuming project (`opal-frontend`) to switch between local development and the published npm version of the library.
 
 To use a published version of this library during development in another project:
+
 1. In the consuming project, run:
-    ```bash
-    yarn import:published:common-node-lib
-    ```
+   ```bash
+   yarn import:published:common-node-lib
+   ```
 
 To use a local version of this library during development in another project:
 
 1. Build this library:
-    ```bash
-    yarn build
-    ```
+
+   ```bash
+   yarn build
+   ```
 
 2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to the local build:
 
-    ```bash
-    # In your shell config file (.zshrc, .bash_profile, or .bashrc)
-    export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB DIST FOLDER]"
-    ```
+   ```bash
+   # In your shell config file (.zshrc, .bash_profile, or .bashrc)
+   export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB DIST FOLDER]"
+   ```
 
 3. In the consuming project (e.g. `opal-frontend`), run:
-    ```bash
-    yarn import:local:common-node-lib
-    ```
 
-    This will remove the published version and install the local build using the path provided.
+   ```bash
+   yarn import:local:common-node-lib
+   ```
+
+   This will remove the published version and install the local build using the path provided.
 
 4. To switch back to the published version:
-    ```bash
-    yarn import:published:common-node-lib
-    ```
+   ```bash
+   yarn import:published:common-node-lib
+   ```
 
 This setup makes it easy to switch between development and production versions of the shared library.
 
@@ -101,6 +105,26 @@ To lint and check formatting:
 
 ```bash
 yarn lint
+```
+
+There is a custom lint rule for member ordering to ensure members in the code are ordered in the following format:
+
+```json
+[
+  "private-static-field",
+  "protected-static-field",
+  "public-static-field",
+  "private-instance-field",
+  "protected-instance-field",
+  "public-instance-field",
+  "constructor",
+  "private-static-method",
+  "protected-static-method",
+  "public-static-method",
+  "private-instance-method",
+  "protected-instance-method",
+  "public-instance-method"
+]
 ```
 
 To fix formatting issues automatically:
