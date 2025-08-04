@@ -23,12 +23,7 @@ export class Helmet {
     if (enabled) {
       logger.info('Helmet enabled');
       // include default helmet functions
-      const scriptSrc = [
-        self,
-        dynatraceDomain,
-        "'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='",
-        "'unsafe-inline'",
-      ];
+      const scriptSrc = [self, dynatraceDomain, "'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='"];
 
       if (this.developmentMode) {
         // Uncaught EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval'
@@ -48,7 +43,6 @@ export class Helmet {
               imgSrc: [self],
               objectSrc: [self],
               scriptSrc,
-              styleSrc: [self, "'unsafe-inline'"],
               scriptSrcAttr: ["'unsafe-inline'"],
             },
           },
