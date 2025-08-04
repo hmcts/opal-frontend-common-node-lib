@@ -43,7 +43,6 @@ export class Helmet {
               imgSrc: [self],
               objectSrc: [self],
               scriptSrc,
-              styleSrc: [self],
               scriptSrcAttr: ["'unsafe-inline'"],
             },
           },
