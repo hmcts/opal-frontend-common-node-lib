@@ -4,6 +4,7 @@ import { Logger } from '@hmcts/nodejs-logging';
 
 const logger = Logger.getLogger('helmet');
 const self = "'self'";
+const unsafeInline = "'unsafe-inline'";
 const dynatraceDomain = '*.dynatrace.com';
 const LaunchDarklyDomain = '*.launchdarkly.com';
 const azureDomain = '*.azure.com';
@@ -43,8 +44,8 @@ export class Helmet {
               imgSrc: [self],
               objectSrc: [self],
               scriptSrc,
-              styleSrc: [self],
-              scriptSrcAttr: ["'unsafe-inline'"],
+              styleSrc: [self, unsafeInline],
+              scriptSrcAttr: [unsafeInline],
             },
           },
           referrerPolicy: { policy: 'origin' },
