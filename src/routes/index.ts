@@ -14,36 +14,6 @@ import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/se
 import ssoLogoutCallback from '../sso/sso-logout-callback';
 
 export class Routes {
-  public enableFor(
-    app: Application,
-    ssoEnabled: boolean,
-    expiryConfiguration: ExpiryConfiguration,
-    routesConfiguration: RoutesConfiguration,
-    sessionConfiguration: SessionConfiguration,
-    ssoConfiguration: SsoConfiguration,
-  ): void {
-    // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }));
-
-    if (ssoEnabled) {
-      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration);
-    } else {
-      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
-    }
-
-    app.get(sessionConfiguration.userStateUrl, (req: Request, res: Response) => sessionUserState(req, res));
-    app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
-      sessionExpiry(
-        req,
-        res,
-        expiryConfiguration.testMode,
-        expiryConfiguration.expiryTimeInMilliseconds,
-        expiryConfiguration.warningThresholdInMilliseconds,
-      ),
-    );
-  }
-
   private setupSSORoutes(
     app: Application,
     ssoConfiguration: SsoConfiguration,
@@ -120,5 +90,35 @@ export class Routes {
 
     // AUTHENTICATED
     app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => ssoAuthenticatedStub(req, res));
+  }
+
+  public enableFor(
+    app: Application,
+    ssoEnabled: boolean,
+    expiryConfiguration: ExpiryConfiguration,
+    routesConfiguration: RoutesConfiguration,
+    sessionConfiguration: SessionConfiguration,
+    ssoConfiguration: SsoConfiguration,
+  ): void {
+    // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: false }));
+
+    if (ssoEnabled) {
+      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration);
+    } else {
+      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
+    }
+
+    app.get(sessionConfiguration.userStateUrl, (req: Request, res: Response) => sessionUserState(req, res));
+    app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
+      sessionExpiry(
+        req,
+        res,
+        expiryConfiguration.testMode,
+        expiryConfiguration.expiryTimeInMilliseconds,
+        expiryConfiguration.warningThresholdInMilliseconds,
+      ),
+    );
   }
 }

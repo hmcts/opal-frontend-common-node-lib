@@ -11,29 +11,6 @@ const FileStore = FileStoreFactory(session);
 const logger = Logger.getLogger('session-storage');
 
 export default class SessionStorage {
-  public enableFor(app: Application, sessionStorage: SessionStorageConfiguration): void {
-    app.use(cookieParser(sessionStorage.secret));
-    app.set('trust proxy', 1);
-
-    app.use(
-      session({
-        name: sessionStorage.prefix,
-        resave: false,
-        saveUninitialized: false,
-        secret: sessionStorage.secret,
-        cookie: {
-          httpOnly: true,
-          maxAge: sessionStorage.maxAge,
-          sameSite: sessionStorage.sameSite,
-          secure: sessionStorage.secure,
-          domain: sessionStorage.domain,
-        },
-        rolling: true,
-        store: this.getStore(app, sessionStorage.redisEnabled, sessionStorage.redisConnectionString),
-      }),
-    );
-  }
-
   private getStore(app: Application, enabled: boolean, connectionString: string) {
     if (enabled) {
       logger.info('Using Redis session store', connectionString);
@@ -64,5 +41,27 @@ export default class SessionStorage {
     }
 
     return new FileStore({ path: '/tmp' });
+  }
+  public enableFor(app: Application, sessionStorage: SessionStorageConfiguration): void {
+    app.use(cookieParser(sessionStorage.secret));
+    app.set('trust proxy', 1);
+
+    app.use(
+      session({
+        name: sessionStorage.prefix,
+        resave: false,
+        saveUninitialized: false,
+        secret: sessionStorage.secret,
+        cookie: {
+          httpOnly: true,
+          maxAge: sessionStorage.maxAge,
+          sameSite: sessionStorage.sameSite,
+          secure: sessionStorage.secure,
+          domain: sessionStorage.domain,
+        },
+        rolling: true,
+        store: this.getStore(app, sessionStorage.redisEnabled, sessionStorage.redisConnectionString),
+      }),
+    );
   }
 }
