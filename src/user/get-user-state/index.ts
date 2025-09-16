@@ -49,16 +49,28 @@ const getUserState = (opalUserServiceBaseUrl: string): RequestHandler => {
       res.set('Pragma', 'no-cache');
       res.status(200).json(userState);
     } catch (err) {
-      // Log a structured error for diagnostics (without leaking tokens).
       const e = err as AxiosError<{ message?: string; error?: string }>;
       const status = e.response?.status ?? 502;
       const message = e.response?.data?.message ?? e.message ?? 'Unable to fetch user state from opal-user-service';
       const code = e.response?.data?.error ?? 'user_state_fetch_failed';
 
       logger.error(
-        { err: e.toJSON?.() ?? String(e), correlationId: req.headers['x-correlation-id'] },
+        {
+          // Prefer structured output instead of String(e)
+          err: {
+            name: e.name,
+            message: e.message,
+            stack: e.stack,
+            response: {
+              status: e.response?.status,
+              data: e.response?.data,
+            },
+          },
+          correlationId: req.headers['x-correlation-id'],
+        },
         'fetchUserState error',
       );
+
       res.status(status).json({ error: code, message });
     }
   };
