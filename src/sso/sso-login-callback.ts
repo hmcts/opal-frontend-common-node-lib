@@ -1,25 +1,3 @@
-/**
- * SSO Login Callback Handler
- *
- * Purpose:
- * - Handles the redirect from Azure AD/Microsoft Identity after a successful login.
- * - Exchanges the authorization code for an access token using MSAL (ConfidentialClientApplication).
- * - Stores only the access token in the session (under `req.session.securityToken.access_token`).
- * - Intentionally does **not** cache user state. User state is fetched on demand from the opal-user-service.
- *
- * Returns:
- * - 302 redirect to the provided `frontendHostname` on success.
- * - 400 if the authorization code is missing.
- * - 500 if the token exchange fails.
- *
- * Security:
- * - Uses the `api://{clientId}/opalinternaluser` scope to get a token for the backend API.
- * - Avoids logging sensitive tokens; errors are logged with context only.
- *
- * Notes:
- * - `frontendHostname` and `ssoLoginCallback` must combine to the same redirect URI registered in Azure AD.
- * - This handler should be mounted on the route configured as the redirect/callback in your app registration.
- */
 import { Request, Response } from 'express';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import 'express-session';
@@ -29,15 +7,21 @@ import { Logger } from '@hmcts/nodejs-logging';
 const logger = Logger.getLogger('sso-login-callback');
 
 /**
- * Express handler for the SSO login callback.
+ * Handles the SSO login callback by exchanging the authorization code for tokens using MSAL,
+ * storing the access token in the session, and redirecting the user to the frontend.
  *
- * @param req - Express request containing the POSTed `code` (authorization code) in the body.
- * @param res - Express response.
- * @param msalInstance - A configured MSAL ConfidentialClientApplication used for code exchange.
- * @param clientId - The Azure App Registration (client) ID of the resource (opal user service audience).
- * @param frontendHostname - Absolute URL of the frontend host (used for redirectUri and final redirect).
- * @param ssoLoginCallback - The path component of the registered redirect URI (e.g. `/auth/callback`).
- * @returns void
+ * @param req - The Express request object, expected to contain the authorization code in the body.
+ * @param res - The Express response object, used to send responses or perform redirects.
+ * @param msalInstance - An instance of MSAL ConfidentialClientApplication used to acquire tokens.
+ * @param clientId - The client ID of the application, used to build the token request scope.
+ * @param frontendHostname - The base URL of the frontend application, used for redirect URIs.
+ * @param ssoLoginCallback - The path of the SSO login callback, appended to the frontend hostname for redirect URI.
+ * @returns A promise that resolves when the callback handling is complete.
+ *
+ * @remarks
+ * - If the authorization code is missing, responds with HTTP 400.
+ * - On successful token acquisition, stores the access token in the session and redirects to the frontend.
+ * - On error, logs the error and responds with HTTP 500.
  */
 export default async function ssoLoginCallbackHandler(
   req: Request,

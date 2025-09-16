@@ -1,24 +1,15 @@
-/**
- * SSO Authenticated Check
- *
- * Purpose:
- * - Lightweight endpoint to confirm whether the current session has a **valid (non-expired)** access token.
- * - Does not perform any backend calls; relies on local session only.
- *
- * Returns:
- * - 200 (body: true) when a token exists and is not expired.
- * - 401 (body: false) when the token is missing or expired.
- *
- * Caching:
- * - Sends `no-store`/`no-cache` headers to prevent intermediaries from caching the authentication state.
- */
 import { Request, Response } from 'express';
 import { Jwt } from '../utils';
 
 /**
- * Express handler to check session authentication state.
- * @param req - Express request with potential session token.
- * @param res - Express response with boolean result.
+ * Express middleware to check if the user is authenticated via SSO.
+ *
+ * Sets appropriate cache control headers to prevent caching of sensitive authentication responses.
+ * Reads the access token from the session and checks if it is present and not expired.
+ * Responds with HTTP 401 and `false` if the token is missing or expired, otherwise responds with HTTP 200 and `true`.
+ *
+ * @param req - Express request object, expected to have a session with a securityToken containing an access_token.
+ * @param res - Express response object used to send the authentication status.
  */
 export default (req: Request, res: Response) => {
   res.set('Cache-Control', 'no-store, no-cache, private');

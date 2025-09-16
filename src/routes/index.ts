@@ -75,6 +75,7 @@ export class Routes {
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
+    userRoutesConfig: UserRoutesConfig,
   ): void {
     // LOGIN
     app.get(ssoConfiguration.login, (req: Request, res: Response, next: NextFunction) => ssoLoginStub(req, res, next));
@@ -83,6 +84,9 @@ export class Routes {
     app.get(ssoConfiguration.loginCallback, (req: Request, res: Response, next: NextFunction) =>
       ssoLoginCallbackStub(req, res, next, routesConfiguration.opalApiTarget),
     );
+
+    // USER STATE
+    app.get(userRoutesConfig.getUserStateUrl, getUserState(routesConfiguration.opalUserServiceTarget));
 
     // LOGOUT
     app.get(ssoConfiguration.logout, (req: Request, res: Response, next: NextFunction) =>
@@ -114,7 +118,7 @@ export class Routes {
     if (ssoEnabled) {
       this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, userRoutesConfig);
     } else {
-      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
+      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration, userRoutesConfig);
     }
 
     app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
