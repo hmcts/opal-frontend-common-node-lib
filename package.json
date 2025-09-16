@@ -116,6 +116,10 @@
     },
     "./types": {
       "types": "./global.d.ts"
+    },
+    "./user": {
+      "import": "./user/index.js",
+      "types": "./user/index.d.ts"
     }
   }
 }

@@ -1,4 +1,4 @@
-import UserState from './userState';
+import UserState from './user-state';
 
 class SecurityToken {
   user_state: UserState | undefined;
