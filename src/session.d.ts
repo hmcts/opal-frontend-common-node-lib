@@ -1,8 +1,8 @@
-import { SecurityToken, UserState } from './interfaces/index';
+import { SecurityToken } from './interfaces/index';
 
 declare module 'express-session' {
   interface SessionData {
-    user_state: UserState | undefined;
+    user_state: undefined;
     securityToken: SecurityToken | undefined;
   }
 }

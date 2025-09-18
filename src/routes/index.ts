@@ -11,15 +11,12 @@ import RoutesConfiguration from '@hmcts/opal-frontend-common-node/interfaces/rou
 import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-config';
 import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
 import ssoLogoutCallback from '../sso/sso-logout-callback';
-import { getUserState } from '../user';
-import { UserRoutesConfig } from '../interfaces';
 
 export class Routes {
   private setupSSORoutes(
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
-    userRoutesConfig: UserRoutesConfig,
   ): void {
     if (!routesConfiguration.clientId || !routesConfiguration.clientSecret || !routesConfiguration.tenantId) {
       throw new Error('Missing essential SSO configuration fields: clientId, clientSecret, or tenantId');
@@ -50,9 +47,6 @@ export class Routes {
       ),
     );
 
-    // USER STATE
-    app.get(userRoutesConfig.getUserStateUrl, getUserState(routesConfiguration.opalUserServiceTarget));
-
     // LOGOUT
     app.get(ssoConfiguration.logout, (req: Request, res: Response) =>
       ssoLogout(
@@ -75,7 +69,6 @@ export class Routes {
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
-    userRoutesConfig: UserRoutesConfig,
   ): void {
     // LOGIN
     app.get(ssoConfiguration.login, (req: Request, res: Response, next: NextFunction) => ssoLoginStub(req, res, next));
@@ -84,9 +77,6 @@ export class Routes {
     app.get(ssoConfiguration.loginCallback, (req: Request, res: Response, next: NextFunction) =>
       ssoLoginCallbackStub(req, res, next, routesConfiguration.opalApiTarget),
     );
-
-    // USER STATE
-    app.get(userRoutesConfig.getUserStateUrl, getUserState(routesConfiguration.opalUserServiceTarget));
 
     // LOGOUT
     app.get(ssoConfiguration.logout, (req: Request, res: Response, next: NextFunction) =>
@@ -109,16 +99,15 @@ export class Routes {
     routesConfiguration: RoutesConfiguration,
     sessionConfiguration: SessionConfiguration,
     ssoConfiguration: SsoConfiguration,
-    userRoutesConfig: UserRoutesConfig,
   ): void {
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
     if (ssoEnabled) {
-      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, userRoutesConfig);
+      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration);
     } else {
-      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration, userRoutesConfig);
+      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
     }
 
     app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
