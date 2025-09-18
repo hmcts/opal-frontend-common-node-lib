@@ -64,7 +64,7 @@
       ],
       "@hmcts/opal-frontend-common-node/session/session-storage/*": [
         "./src/session/session-storage/*",
-      ],
+      ]
     }
   },
   "include": ["src", "src/index.ts"],

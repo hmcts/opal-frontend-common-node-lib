@@ -1,7 +1,5 @@
-import UserState from './userState';
-
 class SecurityToken {
-  user_state: UserState | undefined;
+  user_state: undefined;
   access_token!: string;
 }
 

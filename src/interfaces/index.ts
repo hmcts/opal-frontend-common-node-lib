@@ -1,4 +1,3 @@
-import UserState from './userState';
 import SecurityToken from './securityToken';
 import launchDarklyConfig from './launch-darkly-config';
 import appInsightsConfig from './app-insights-config';
@@ -10,7 +9,6 @@ import SsoConfiguration from './sso-config';
 import SessionConfiguration from './session-config';
 
 export {
-  UserState,
   SecurityToken,
   launchDarklyConfig,
   appInsightsConfig,
