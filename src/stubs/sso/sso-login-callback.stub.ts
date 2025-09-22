@@ -55,7 +55,6 @@ export default async (req: Request, res: Response, next: NextFunction, opalApiUr
         logger.error('Error saving session', err);
         return next(err);
       }
-      logger.info('Session saved (access token only)');
       return res.redirect('/');
     });
   } catch (error) {

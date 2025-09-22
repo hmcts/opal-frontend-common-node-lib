@@ -2,25 +2,36 @@ import { Request, Response } from 'express';
 import { Jwt } from '../utils';
 
 /**
- * Express middleware to check if the user is authenticated via SSO.
+ * Express handler that verifies whether the current session has a valid (non-expired) access token.
  *
- * Sets appropriate cache control headers to prevent caching of sensitive authentication responses.
- * Reads the access token from the session and checks if it is present and not expired.
- * Responds with HTTP 401 and `false` if the token is missing or expired, otherwise responds with HTTP 200 and `true`.
+ * Behavior:
+ * - Reads the access token from `req.session.securityToken?.access_token`.
+ * - Prevents caching of the endpoint by setting the `Cache-Control: no-store, must-revalidate` header.
+ * - If the token is missing or expired (determined by `Jwt.isJwtExpired`), responds with HTTP 401 and sends `false`.
+ * - If the token is present and not expired, responds with HTTP 200 and sends `true`.
  *
- * @param req - Express request object, expected to have a session with a securityToken containing an access_token.
- * @param res - Express response object used to send the authentication status.
+ * @param req - Express Request; expected to contain `session.securityToken?.access_token` (string).
+ * @param res - Express Response used to set headers, status code, and send a boolean result.
+ * @returns void
+ *
+ * @remarks
+ * This endpoint is a lightweight authentication status check and has the side-effect of modifying response headers
+ * and sending an HTTP status and boolean payload. It relies on `Jwt.isJwtExpired` for token expiry checks.
+ *
+ * @example
+ * // GET /sso/authenticated
+ * // -> 200 true   (valid token)
+ * // -> 401 false  (missing or expired token)
+ *
+ * @see Jwt.isJwtExpired
  */
 export default (req: Request, res: Response) => {
-  res.set('Cache-Control', 'no-store, no-cache, private');
-  res.set('Pragma', 'no-cache');
-
-  // Read the access token from the session (set during the SSO login callback).
   const accessToken = req.session.securityToken?.access_token;
-  // Validate expiry without decoding secrets; returns true when token is missing or expired.
-  const isJwtExpired = Jwt.isJwtExpired(accessToken);
 
-  if (!accessToken || isJwtExpired) {
+  // Don't allow caching of this endpoint
+  res.header('Cache-Control', 'no-store, must-revalidate');
+
+  if (!accessToken || Jwt.isJwtExpired(accessToken)) {
     res.status(401).send(false);
   } else {
     res.status(200).send(true);
