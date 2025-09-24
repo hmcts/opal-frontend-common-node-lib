@@ -2,25 +2,32 @@ import { Request, Response } from 'express';
 import { Jwt } from '../../utils';
 
 /**
- * Express middleware that checks if the current session has a valid, non-expired access token.
+ * Middleware stub that validates whether the current request is authenticated via a JWT stored on the session.
  *
- * - Sets the `Cache-Control` header to prevent caching of the endpoint.
- * - Retrieves the `access_token` from the session.
- * - If the token is missing or expired (as determined by `Jwt.isJwtExpired`), responds with HTTP 401 and `false`.
- * - Otherwise, responds with HTTP 200 and `true`.
+ * This handler:
+ * - Reads the access token from req.session.securityToken?.access_token.
+ * - Prevents caching of the response by setting the "Cache-Control" header to "no-store, must-revalidate".
+ * - If there is no access token or the token is expired (via Jwt.isJwtExpired), it responds with HTTP 401 and a body of false.
+ * - If the token exists and is valid, it responds with HTTP 200 and a body of true.
  *
- * @param req - The Express request object, expected to have a `session.securityToken.access_token` property.
- * @param res - The Express response object used to send the HTTP response.
+ * The function writes the response directly to the provided Express Response object and does not return a value.
+ *
+ * @param req - The incoming Express Request. Expects a session object with an optional securityToken containing access_token.
+ * @param res - The Express Response used to set headers, status, and send the boolean authentication result.
+ *
+ * @remarks
+ * - This is a simple stub intended for testing or service-mocking; it performs no additional authentication logic beyond token existence and expiry check.
+ * - Side effects: sets Cache-Control header and sends an HTTP response (status + boolean body).
  */
 export default (req: Request, res: Response) => {
+  const accessToken = req.session.securityToken?.access_token;
+
   // Don't allow caching of this endpoint
   res.header('Cache-Control', 'no-store, must-revalidate');
 
-  const accessToken = req.session.securityToken?.access_token;
-
   if (!accessToken || Jwt.isJwtExpired(accessToken)) {
     res.status(401).send(false);
+  } else {
+    res.status(200).send(true);
   }
-
-  res.status(200).send(true);
 };
