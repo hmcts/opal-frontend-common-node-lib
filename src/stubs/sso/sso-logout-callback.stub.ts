@@ -13,7 +13,7 @@ import { Logger } from '@hmcts/nodejs-logging';
  * @remarks
  * If an error occurs while destroying the session, it is logged and passed to the next middleware.
  */
-export default (req: Request, res: Response, next: NextFunction, prefix: string) => {
+const ssoLogoutCallback = (req: Request, res: Response, next: NextFunction, prefix: string) => {
   const logger = Logger.getLogger('logout-callback-stub');
 
   req.session.destroy((err) => {
@@ -26,3 +26,5 @@ export default (req: Request, res: Response, next: NextFunction, prefix: string)
     res.redirect('/');
   });
 };
+
+export default ssoLogoutCallback;
