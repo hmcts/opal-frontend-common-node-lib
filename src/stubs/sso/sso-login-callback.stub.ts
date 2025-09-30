@@ -19,7 +19,7 @@ import axios from 'axios';
  * - On success, the access token is stored in `req.session.securityToken` and the user is redirected to the root path.
  * - Intended for use in test and development environments only.
  */
-export default async (req: Request, res: Response, next: NextFunction, opalApiUrl: string) => {
+export default async function ssoLoginCallback(req: Request, res: Response, next: NextFunction, opalApiUrl: string) {
   const logger = Logger.getLogger('login-callback-stub');
 
   try {
@@ -61,4 +61,4 @@ export default async (req: Request, res: Response, next: NextFunction, opalApiUr
     logger.error('Error on login-stub callback', error);
     return next(error);
   }
-};
+}

@@ -1,4 +1,4 @@
-import os from 'os';
+import os from 'node:os';
 import healthcheck from '@hmcts/nodejs-healthcheck';
 import { Application } from 'express';
 

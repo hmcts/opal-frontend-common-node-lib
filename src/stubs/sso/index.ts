@@ -1,7 +1,5 @@
-import ssoLoginStub from './sso-login.stub';
-import ssoLoginCallbackStub from './sso-login-callback.stub';
-import ssoAuthenticatedStub from './sso-authenticated.stub';
-import ssoLogoutStub from './sso-logout.stub';
-import ssoLogoutCallbackStub from './sso-logout-callback.stub';
-
-export { ssoLoginStub, ssoLoginCallbackStub, ssoAuthenticatedStub, ssoLogoutStub, ssoLogoutCallbackStub };
+export { default as ssoLoginStub } from './sso-login.stub';
+export { default as ssoLoginCallbackStub } from './sso-login-callback.stub';
+export { default as ssoAuthenticatedStub } from './sso-authenticated.stub';
+export { default as ssoLogoutStub } from './sso-logout.stub';
+export { default as ssoLogoutCallbackStub } from './sso-logout-callback.stub';

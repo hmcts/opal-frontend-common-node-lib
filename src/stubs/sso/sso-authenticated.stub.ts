@@ -19,7 +19,7 @@ import { Jwt } from '../../utils';
  * - This is a simple stub intended for testing or service-mocking; it performs no additional authentication logic beyond token existence and expiry check.
  * - Side effects: sets Cache-Control header and sends an HTTP response (status + boolean body).
  */
-export default (req: Request, res: Response) => {
+const ssoAuthenticatedStub = (req: Request, res: Response) => {
   const accessToken = req.session.securityToken?.access_token;
 
   // Don't allow caching of this endpoint
@@ -31,3 +31,5 @@ export default (req: Request, res: Response) => {
     res.status(200).send(true);
   }
 };
+
+export default ssoAuthenticatedStub;

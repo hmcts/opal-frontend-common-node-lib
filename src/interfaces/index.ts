@@ -1,21 +1,9 @@
-import SecurityToken from './securityToken';
-import launchDarklyConfig from './launch-darkly-config';
-import appInsightsConfig from './app-insights-config';
-import TransferServerState from './transfer-server-state';
-import ExpiryConfiguration from './session-expiry-config';
-import SessionStorageConfiguration from './session-storage-config';
-import RoutesConfiguration from './routes-config';
-import SsoConfiguration from './sso-config';
-import SessionConfiguration from './session-config';
-
-export {
-  SecurityToken,
-  launchDarklyConfig,
-  appInsightsConfig,
-  TransferServerState,
-  ExpiryConfiguration,
-  SessionStorageConfiguration,
-  RoutesConfiguration,
-  SsoConfiguration,
-  SessionConfiguration,
-};
+export { default as SecurityToken } from './securityToken';
+export { default as launchDarklyConfig } from './launch-darkly-config';
+export { default as appInsightsConfig } from './app-insights-config';
+export { default as TransferServerState } from './transfer-server-state';
+export { default as ExpiryConfiguration } from './session-expiry-config';
+export { default as SessionStorageConfiguration } from './session-storage-config';
+export { default as RoutesConfiguration } from './routes-config';
+export { default as SsoConfiguration } from './sso-config';
+export { default as SessionConfiguration } from './session-config';

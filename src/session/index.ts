@@ -1,4 +1,2 @@
-import SessionStorage from './session-storage';
-import sessionExpiry from './session-expiry';
-
-export { SessionStorage, sessionExpiry };
+export { default as SessionStorage } from './session-storage';
+export { default as sessionExpiry } from './session-expiry';

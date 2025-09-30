@@ -25,7 +25,7 @@ import { Jwt } from '../utils';
  *
  * @see Jwt.isJwtExpired
  */
-export default (req: Request, res: Response) => {
+const ssoAuthenticatedHandler = (req: Request, res: Response) => {
   const accessToken = req.session.securityToken?.access_token;
 
   // Don't allow caching of this endpoint
@@ -37,3 +37,5 @@ export default (req: Request, res: Response) => {
     res.status(200).send(true);
   }
 };
+
+export default ssoAuthenticatedHandler;

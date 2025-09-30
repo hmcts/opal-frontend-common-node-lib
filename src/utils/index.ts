@@ -1,3 +1,1 @@
-import { Jwt } from './jwt';
-
-export { Jwt };
+export { Jwt } from './jwt';

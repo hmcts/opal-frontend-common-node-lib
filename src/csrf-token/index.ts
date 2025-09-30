@@ -3,7 +3,7 @@ import { Application } from 'express';
 
 export class CSRFToken {
   public enableFor(app: Application, secret: string, cookieName: string, sameSite: boolean, secure: boolean): void {
-    const ignore = ['/sso/login-callback'];
+    const ignore = new Set(['/sso/login-callback']);
 
     const { doubleCsrfProtection } = doubleCsrf({
       getSecret: () => secret,
@@ -18,7 +18,7 @@ export class CSRFToken {
     });
 
     app.use((req, res, next) => {
-      if (ignore.includes(req.url)) {
+      if (ignore.has(req.url)) {
         next();
       } else {
         doubleCsrfProtection(req, res, next);
