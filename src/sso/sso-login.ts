@@ -16,7 +16,7 @@ import { ConfidentialClientApplication } from '@azure/msal-node';
  * then redirects the user to the authentication provider. If an error occurs, it logs the error and
  * passes it to the next middleware.
  */
-export default async (
+const ssoLoginHandler = async (
   res: Response,
   next: NextFunction,
   msalInstance: ConfidentialClientApplication,
@@ -37,3 +37,5 @@ export default async (
     next(error);
   }
 };
+
+export default ssoLoginHandler;

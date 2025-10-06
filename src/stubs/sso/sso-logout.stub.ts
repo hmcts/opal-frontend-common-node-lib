@@ -13,7 +13,7 @@ import { Jwt } from '../../utils';
  * @param res - The Express response object.
  * @returns Sends a boolean response indicating the validity of the access token.
  */
-export default (req: Request, res: Response) => {
+const handleSsoLogout = (req: Request, res: Response) => {
   // Don't allow caching of this endpoint
   res.header('Cache-Control', 'no-store, must-revalidate');
 
@@ -25,3 +25,5 @@ export default (req: Request, res: Response) => {
 
   return res.status(200).send(true);
 };
+
+export default handleSsoLogout;
