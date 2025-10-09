@@ -202,9 +202,9 @@
     tslib "^2.6.2"
 
 "@azure/msal-browser@^4.11.0":
-  version "4.24.1"
-  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-4.24.1.tgz#16a79bd17f53da866eb36ccdb44c176fb27e2d71"
-  integrity sha512-e4sp8ihJIyZQvN0ZM1MMuKlEiiLWUS9V9+kxsVAc6K8MtpXHui8VINmKUxXH0OOksLhFDpdq4sGW1w6uYp431A==
+  version "4.25.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-4.25.0.tgz#cc80f392bde9adca334cec0c4facd2a9d7121955"
+  integrity sha512-kbL+Ae7/UC62wSzxirZddYeVnHvvkvAnSZkBqL55X+jaSXTAXfngnNsDM5acEWU0Q/SAv3gEQfxO1igWOn87Pg==
   dependencies:
     "@azure/msal-common" "15.13.0"
 
