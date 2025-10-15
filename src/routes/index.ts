@@ -11,12 +11,14 @@ import RoutesConfiguration from '@hmcts/opal-frontend-common-node/interfaces/rou
 import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-config';
 import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
 import ssoLogoutCallback from '../sso/sso-logout-callback';
+import OpalUserServiceConfig from '../interfaces/opal-user-service-config';
 
 export class Routes {
   private setupSSORoutes(
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
+    opalUserServiceConfig: OpalUserServiceConfig,
   ): void {
     if (!routesConfiguration.clientId || !routesConfiguration.clientSecret || !routesConfiguration.tenantId) {
       throw new Error('Missing essential SSO configuration fields: clientId, clientSecret, or tenantId');
@@ -44,6 +46,8 @@ export class Routes {
         routesConfiguration.clientId,
         routesConfiguration.frontendHostname,
         ssoConfiguration.loginCallback,
+        routesConfiguration.opalUserServiceTarget,
+        opalUserServiceConfig,
       ),
     );
 
@@ -99,13 +103,14 @@ export class Routes {
     routesConfiguration: RoutesConfiguration,
     sessionConfiguration: SessionConfiguration,
     ssoConfiguration: SsoConfiguration,
+    opalUserServiceConfig: OpalUserServiceConfig,
   ): void {
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
     if (ssoEnabled) {
-      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration);
+      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceConfig);
     } else {
       this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
     }

@@ -3,26 +3,29 @@ import { ConfidentialClientApplication } from '@azure/msal-node';
 import 'express-session';
 import { SecurityToken } from '../interfaces';
 import { Logger } from '@hmcts/nodejs-logging';
+import { handleCheckUser } from '../services/opal-user-service';
+import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config';
 
 const logger = Logger.getLogger('sso-login-callback');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Handles the SSO login callback by exchanging the authorization code for tokens using MSAL,
- * storing the access token in the session, and redirecting the user to the frontend.
+ * Handles the SSO login callback by processing the authorization code, acquiring tokens,
+ * and managing the user in the Opal User Service. This function is designed to handle
+ * transient network errors during token acquisition and ensures proper session management.
  *
- * @param req - The Express request object, expected to contain the authorization code in the body.
- * @param res - The Express response object, used to send responses or perform redirects.
- * @param msalInstance - An instance of MSAL ConfidentialClientApplication used to acquire tokens.
- * @param clientId - The client ID of the application, used to build the token request scope.
- * @param frontendHostname - The base URL of the frontend application, used for redirect URIs.
- * @param ssoLoginCallback - The path of the SSO login callback, appended to the frontend hostname for redirect URI.
- * @returns A promise that resolves when the callback handling is complete.
+ * @param req - The HTTP request object containing the authorization code in the body.
+ * @param res - The HTTP response object used to send responses back to the client.
+ * @param msalInstance - An instance of the MSAL ConfidentialClientApplication used to acquire tokens.
+ * @param clientId - The client ID of the application registered in Azure AD.
+ * @param frontendHostname - The hostname of the frontend application.
+ * @param ssoLoginCallback - The relative path of the SSO login callback endpoint.
+ * @param opalUserServiceTarget - The target URL of the Opal User Service for user validation.
+ * @param opalUserServiceConfig - Configuration options for the Opal User Service.
  *
- * @remarks
- * - If the authorization code is missing, responds with HTTP 400.
- * - On successful token acquisition, stores the access token in the session and redirects to the frontend.
- * - On error, logs the error and responds with HTTP 500.
+ * @returns A promise that resolves when the SSO login callback process is complete.
+ *
+ * @throws Will throw an error if token acquisition fails after retries or if user validation fails.
  */
 export default async function ssoLoginCallbackHandler(
   req: Request,
@@ -31,6 +34,8 @@ export default async function ssoLoginCallbackHandler(
   clientId: string,
   frontendHostname: string,
   ssoLoginCallback: string,
+  opalUserServiceTarget: string,
+  opalUserServiceConfig: OpalUserServiceConfiguration,
 ): Promise<void> {
   // Build the token request for MSAL using the auth code returned by the IdP.
   const tokenRequest = {
@@ -74,6 +79,14 @@ export default async function ssoLoginCallbackHandler(
     if (!response?.accessToken) throw new Error('No access token in token response');
 
     const accessToken = response.accessToken;
+
+    // Validate and manage user in opal-user-service
+    const userManagementSuccess = await handleCheckUser(opalUserServiceTarget, accessToken, opalUserServiceConfig);
+    if (!userManagementSuccess) {
+      logger.error('User management failed after successful token acquisition');
+      res.status(500).send('User validation failed');
+      return;
+    }
 
     const securityToken: SecurityToken = {
       user_state: undefined,
