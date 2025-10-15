@@ -43,10 +43,8 @@ export class Routes {
         req,
         res,
         confidentialClient,
-        routesConfiguration.clientId,
-        routesConfiguration.frontendHostname,
         ssoConfiguration.loginCallback,
-        routesConfiguration.opalUserServiceTarget,
+        routesConfiguration,
         opalUserServiceConfig,
       ),
     );

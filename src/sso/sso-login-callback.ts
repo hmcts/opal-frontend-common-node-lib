@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import 'express-session';
-import { SecurityToken } from '../interfaces';
+import { RoutesConfiguration, SecurityToken } from '../interfaces';
 import { Logger } from '@hmcts/nodejs-logging';
 import { handleCheckUser } from '../services/opal-user-service';
 import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config';
@@ -31,17 +31,15 @@ export default async function ssoLoginCallbackHandler(
   req: Request,
   res: Response,
   msalInstance: ConfidentialClientApplication,
-  clientId: string,
-  frontendHostname: string,
   ssoLoginCallback: string,
-  opalUserServiceTarget: string,
+  routesConfiguration: RoutesConfiguration,
   opalUserServiceConfig: OpalUserServiceConfiguration,
 ): Promise<void> {
   // Build the token request for MSAL using the auth code returned by the IdP.
   const tokenRequest = {
     code: req.body['code'] as string,
-    scopes: [`api://${clientId}/opalinternaluser`],
-    redirectUri: `${frontendHostname}${ssoLoginCallback}`,
+    scopes: [`api://${routesConfiguration.clientId}/opalinternaluser`],
+    redirectUri: `${routesConfiguration.frontendHostname}${ssoLoginCallback}`,
   };
 
   if (!tokenRequest.code) {
@@ -81,7 +79,11 @@ export default async function ssoLoginCallbackHandler(
     const accessToken = response.accessToken;
 
     // Validate and manage user in opal-user-service
-    const userManagementSuccess = await handleCheckUser(opalUserServiceTarget, accessToken, opalUserServiceConfig);
+    const userManagementSuccess = await handleCheckUser(
+      routesConfiguration.opalUserServiceTarget,
+      accessToken,
+      opalUserServiceConfig,
+    );
     if (!userManagementSuccess) {
       logger.error('User management failed after successful token acquisition');
       res.status(500).send('User validation failed');
@@ -94,7 +96,7 @@ export default async function ssoLoginCallbackHandler(
     };
 
     req.session.securityToken = securityToken;
-    req.session.save(() => res.redirect(frontendHostname));
+    req.session.save(() => res.redirect(routesConfiguration.frontendHostname));
     return;
   } catch (error) {
     logger.error('Error on SSO Login Callback', {

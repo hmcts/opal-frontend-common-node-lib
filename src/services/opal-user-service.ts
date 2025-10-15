@@ -24,12 +24,21 @@ async function checkUserExists(
     });
     return response.status;
   } catch (error: unknown) {
-    const axiosError = error as { response?: { status?: number } };
-    if (axiosError.response && axiosError.response.status) {
-      return axiosError.response.status;
-    } else {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status) {
+        return status;
+      }
+
+      logger.error('Axios error without response status when checking user state', {
+        message: error.message,
+        code: error.code,
+      });
       return 500;
     }
+
+    logger.error('Unexpected error when checking user state', error);
+    return 500;
   }
 }
 
@@ -105,7 +114,7 @@ export async function handleCheckUser(
       logger.info('User exists, proceeding to frontend');
       return true;
 
-    case 404:
+    case 404: {
       logger.info('User not found, attempting to add user');
       const addResult = await addUser(opalUserServiceTarget, accessToken, config.addUserUrl);
       if (addResult) {
@@ -115,8 +124,9 @@ export async function handleCheckUser(
         logger.error('Failed to add user');
         return false;
       }
+    }
 
-    case 409:
+    case 409: {
       logger.info('User conflict detected, attempting to update user');
       const updateResult = await updateUser(opalUserServiceTarget, accessToken, config.updateUserUrl);
       if (updateResult) {
@@ -126,6 +136,7 @@ export async function handleCheckUser(
         logger.error('Failed to update user');
         return false;
       }
+    }
 
     default:
       logger.error('Error during user validation');
