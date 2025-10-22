@@ -75,7 +75,7 @@ export class Routes {
 
     // LOGIN CALLBACK
     app.get(ssoConfiguration.loginCallback, (req: Request, res: Response, next: NextFunction) =>
-      ssoLoginCallbackStub(req, res, next, routesConfiguration.opalApiTarget),
+      ssoLoginCallbackStub(req, res, next, routesConfiguration.opalUserServiceTarget),
     );
 
     // LOGOUT
