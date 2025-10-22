@@ -5,6 +5,7 @@ class TransferServerState {
   launchDarklyConfig!: LaunchDarklyConfig;
   ssoEnabled!: boolean;
   appInsightsConfig!: AppInsightsConfig;
+  userStateCacheExpirationMilliseconds!: number;
 }
 
 export default TransferServerState;

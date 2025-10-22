@@ -86,6 +86,10 @@
       "import": "./routes/index.js",
       "types": "./routes/index.d.ts"
     },
+    "./services": {
+      "import": "./services/index.js",
+      "types": "./services/index.d.ts"
+    },
     "./interfaces": {
       "import": "./interfaces/index.js",
       "types": "./interfaces/index.d.ts"
