@@ -1,19 +1,43 @@
+import { Router } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { rawJson, verifyContentDigest } from '../middlewares/digest-verify.middleware.js';
 
+/**
+ * Creates an Express router that validates request digests and proxies requests to the Opal API.
+ * @param opalApiTarget Upstream Opal API base URL.
+ * @returns Configured Express router ready to mount in the host app.
+ */
 const opalApiProxy = (opalApiTarget: string) => {
-  return createProxyMiddleware({
+  const router = Router();
+
+  router.use(rawJson());
+  router.use(verifyContentDigest);
+
+  const proxy = createProxyMiddleware({
     target: opalApiTarget,
     changeOrigin: true,
-    logger: console,
     on: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       proxyReq: (proxyReq, req: any) => {
         if (req.session.securityToken?.access_token) {
           proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
         }
+        proxyReq.setHeader('Want-Content-Digest', 'sha-256');
+
+        const body = req.body;
+        const buffer = Buffer.isBuffer(body) ? body : null;
+        if (buffer && buffer.length > 0) {
+          proxyReq.setHeader('Content-Length', buffer.length.toString());
+          proxyReq.write(buffer);
+          proxyReq.end();
+        }
       },
     },
   });
+
+  router.use(proxy);
+
+  return router;
 };
 
 export default opalApiProxy;
