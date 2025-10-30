@@ -202,11 +202,11 @@
     tslib "^2.6.2"
 
 "@azure/msal-browser@^4.11.0":
-  version "4.25.1"
-  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-4.25.1.tgz#33e6b05aebc61ba1e508634b1f9a47ffa472221d"
-  integrity sha512-kAdOSNjvMbeBmEyd5WnddGmIpKCbAAGj4Gg/1iURtF+nHmIfS0+QUBBO3uaHl7CBB2R1SEAbpOgxycEwrHOkFA==
+  version "4.26.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-4.26.0.tgz#646622547656c83dd3ef8651322fa689cd2381e2"
+  integrity sha512-Ie3SZ4IMrf9lSwWVzzJrhTPE+g9+QDUfeor1LKMBQzcblp+3J/U1G8hMpNSfLL7eA5F/DjjPXkATJ5JRUdDJLA==
   dependencies:
-    "@azure/msal-common" "15.13.0"
+    "@azure/msal-common" "15.13.1"
 
 "@azure/msal-browser@^4.2.0":
   version "4.9.1"
@@ -215,10 +215,10 @@
   dependencies:
     "@azure/msal-common" "15.4.0"
 
-"@azure/msal-common@15.13.0":
-  version "15.13.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-15.13.0.tgz#229008f8badbf5af6a446a0be1c436be2f4c8cd9"
-  integrity sha512-8oF6nj02qX7eE/6+wFT5NluXRHc05AgdCC3fJnkjiJooq8u7BcLmxaYYSwc2AfEkWRMRi6Eyvvbeqk4U4412Ag==
+"@azure/msal-common@15.13.1":
+  version "15.13.1"
+  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-15.13.1.tgz#3ff635e38f24b656539228c14b095d9e36a1e524"
+  integrity sha512-vQYQcG4J43UWgo1lj7LcmdsGUKWYo28RfEvDQAEMmQIMjSFufvb+pS0FJ3KXmrPmnWlt1vHDl3oip6mIDUQ4uA==
 
 "@azure/msal-common@15.4.0":
   version "15.4.0"
@@ -582,13 +582,13 @@
     "@types/express" "*"
 
 "@types/express@*", "@types/express@^5.0.0":
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/@types/express/-/express-5.0.4.tgz#975e7fc1097066a83b992fd2bb8a4819622e8bae"
-  integrity sha512-g64dbryHk7loCIrsa0R3shBnEu5p6LPJ09bu9NG58+jz+cRUjFrc3Bz0kNQ7j9bXeCsrRDvNET1G54P/GJkAyA==
+  version "5.0.5"
+  resolved "https://registry.yarnpkg.com/@types/express/-/express-5.0.5.tgz#3ba069177caa34ab96585ca23b3984d752300cdc"
+  integrity sha512-LuIQOcb6UmnF7C1PCFmEU1u2hmiHL43fgFQX67sN3H4Z+0Yk0Neo++mFsBjhOAuLzvlQeqAAkeDOZrJs9rzumQ==
   dependencies:
     "@types/body-parser" "*"
     "@types/express-serve-static-core" "^5.0.0"
-    "@types/serve-static" "*"
+    "@types/serve-static" "^1"
 
 "@types/http-errors@*":
   version "2.0.5"
@@ -617,19 +617,12 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.5.tgz#1ef302e01cf7d2b5a0fa526790c9123bf1d06690"
   integrity sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==
 
-"@types/node@*":
-  version "24.9.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.9.1.tgz#b7360b3c789089e57e192695a855aa4f6981a53c"
-  integrity sha512-QoiaXANRkSXK6p0Duvt56W208du4P9Uye9hWLWgGMDTEoKPhuenzNcC4vGUmrNkiOKTlIrBoyNQYNpSwfEZXSg==
+"@types/node@*", "@types/node@^24.0.0":
+  version "24.9.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.9.2.tgz#90ded2422dbfcafcf72080f28975adc21366148d"
+  integrity sha512-uWN8YqxXxqFMX2RqGOrumsKeti4LlmIMIyV0lgut4jx7KQBcBiW6vkDtIBvHnHIquwNfJhk8v2OtmO8zXWHfPA==
   dependencies:
     undici-types "~7.16.0"
-
-"@types/node@^22.0.0":
-  version "22.18.12"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.18.12.tgz#e165d87bc25d7bf6d3657035c914db7485de84fb"
-  integrity sha512-BICHQ67iqxQGFSzfCFTT7MRQ5XcBjG5aeKh5Ok38UBbPe5fxTyE+aHFxwVrGyr8GNlqFMLKD1D3P2K/1ks8tog==
-  dependencies:
-    undici-types "~6.21.0"
 
 "@types/qs@*":
   version "6.14.0"
@@ -656,7 +649,7 @@
     "@types/mime" "^1"
     "@types/node" "*"
 
-"@types/serve-static@*":
+"@types/serve-static@^1":
   version "1.15.10"
   resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.15.10.tgz#768169145a778f8f5dfcb6360aead414a3994fee"
   integrity sha512-tRs1dB+g8Itk72rlSI2ZrW6vZg0YrLI81iQSTkMmOqnqCaNr/8Ek4VwWcN5vZgCYWbg/JJSGBlUaYGAOP73qBw==
@@ -909,9 +902,9 @@ asynckit@^0.4.0:
   integrity sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==
 
 axios@^1.6.2:
-  version "1.12.2"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.12.2.tgz#6c307390136cf7a2278d09cec63b136dfc6e6da7"
-  integrity sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.1.tgz#45b62dc8fe04e0e92274e08b98e910ba3d7963a7"
+  integrity sha512-hU4EGxxt+j7TQijx1oYdAjw4xuIp1wRQSsbMFwSthCWeBQur1eF+qJ5iQ5sN3Tw8YRzQNKb8jszgBdMDVqwJcw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.4"
@@ -2830,11 +2823,6 @@ uid-safe@~2.1.5:
   integrity sha512-KPHm4VL5dDXKz01UuEd88Df+KzynaohSL9fBh096KWAxSKZQDI2uBrVqtvRM4rwrIrRRKsdLNML/lnaaVSRioA==
   dependencies:
     random-bytes "~1.0.0"
-
-undici-types@~6.21.0:
-  version "6.21.0"
-  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.21.0.tgz#691d00af3909be93a7faa13be61b3a5b50ef12cb"
-  integrity sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==
 
 undici-types@~7.16.0:
   version "7.16.0"
