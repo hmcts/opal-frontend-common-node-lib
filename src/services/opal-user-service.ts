@@ -8,13 +8,13 @@ const logger = Logger.getLogger('opal-user-service');
  * Checks if a user exists in the opal-user-service
  * @param opalUserServiceTarget - The base URL of the opal-user-service
  * @param accessToken - The access token for authentication
- * @returns Promise<number>
+ * @returns Promise<{status: number, userId?: string, version?: string}>
  */
 async function checkUserExists(
   opalUserServiceTarget: string,
   accessToken: string,
   userStateUrl: string,
-): Promise<number> {
+): Promise<{ status: number; userId?: string; version?: string }> {
   try {
     const response = await axios.get(`${opalUserServiceTarget}${userStateUrl}`, {
       headers: {
@@ -22,23 +22,35 @@ async function checkUserExists(
         'Content-Type': 'application/json',
       },
     });
-    return response.status;
+
+    return {
+      status: response.status,
+      userId: response.data?.userId,
+      version: response.data?.version,
+    };
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       if (status) {
-        return status;
+        // For 409 conflicts, try to extract userId and version from error response
+        const userId = error.response?.data?.userId;
+        const version = error.response?.data?.version;
+        return {
+          status,
+          userId: userId,
+          version: version,
+        };
       }
 
       logger.error('Axios error without response status when checking user state', {
         message: error.message,
         code: error.code,
       });
-      return 500;
+      return { status: 500 };
     }
 
     logger.error('Unexpected error when checking user state', error);
-    return 500;
+    return { status: 500 };
   }
 }
 
@@ -52,7 +64,6 @@ async function addUser(opalUserServiceTarget: string, accessToken: string, addUs
   try {
     const response = await axios.post(
       `${opalUserServiceTarget}${addUserUrl}`,
-      // TODO: include user details in the body if required by the API
       {},
       {
         headers: {
@@ -73,18 +84,27 @@ async function addUser(opalUserServiceTarget: string, accessToken: string, addUs
  * Updates an existing user via the opal-user-service
  * @param opalUserServiceTarget - The base URL of the opal-user-service
  * @param accessToken - The access token for authentication
+ * @param updateUserUrl - The update user endpoint URL
+ * @param userId - The user ID to update
+ * @param version - The version number for optimistic locking
  * @returns Promise<boolean> - true if successful, false otherwise
  */
-async function updateUser(opalUserServiceTarget: string, accessToken: string, updateUserUrl: string): Promise<boolean> {
+async function updateUser(
+  opalUserServiceTarget: string,
+  accessToken: string,
+  updateUserUrl: string,
+  userId: string,
+  version: string,
+): Promise<boolean> {
   try {
     const response = await axios.put(
-      `${opalUserServiceTarget}${updateUserUrl}`,
-      // TODO: include user details in the body if required by the API
+      `${opalUserServiceTarget}${updateUserUrl}/${userId}`,
       {},
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          'If-Match': version,
         },
       },
     );
@@ -107,9 +127,9 @@ export async function handleCheckUser(
   accessToken: string,
   config: OpalUserServiceConfiguration,
 ): Promise<boolean> {
-  const userStatus = await checkUserExists(opalUserServiceTarget, accessToken, config.userStateUrl);
+  const userResult = await checkUserExists(opalUserServiceTarget, accessToken, config.userStateUrl);
 
-  switch (userStatus) {
+  switch (userResult.status) {
     case 200:
       logger.info('User exists, proceeding to frontend');
       return true;
@@ -128,7 +148,21 @@ export async function handleCheckUser(
 
     case 409: {
       logger.info('User conflict detected, attempting to update user');
-      const updateResult = await updateUser(opalUserServiceTarget, accessToken, config.updateUserUrl);
+      if (!userResult.userId) {
+        logger.error('Cannot update user: userId not available');
+        return false;
+      }
+      if (!userResult.version) {
+        logger.error('Cannot update user: version not available');
+        return false;
+      }
+      const updateResult = await updateUser(
+        opalUserServiceTarget,
+        accessToken,
+        config.updateUserUrl,
+        userResult.userId,
+        userResult.version,
+      );
       if (updateResult) {
         logger.info('User successfully updated');
         return true;
