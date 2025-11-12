@@ -5,6 +5,7 @@ export * from './helmet';
 export * from './properties-volume';
 export * from './csrf-token';
 export * from './routes';
+export * from './services';
 
 // INTERFACES
 export * from './interfaces';
