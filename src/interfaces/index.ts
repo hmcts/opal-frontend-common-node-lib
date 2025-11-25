@@ -7,3 +7,4 @@ export { default as SessionStorageConfiguration } from './session-storage-config
 export { default as RoutesConfiguration } from './routes-config';
 export { default as SsoConfiguration } from './sso-config';
 export { default as SessionConfiguration } from './session-config';
+export { default as OpalUserServiceConfiguration } from './opal-user-service-config';
