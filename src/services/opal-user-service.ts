@@ -8,13 +8,13 @@ const logger = Logger.getLogger('opal-user-service');
  * Checks if a user exists in the opal-user-service
  * @param opalUserServiceTarget - The base URL of the opal-user-service
  * @param accessToken - The access token for authentication
- * @returns Promise<{status: number, userId?: string, version?: string}>
+ * @returns Promise<{status: number, user_id?: string, version?: string}>
  */
 async function checkUserExists(
   opalUserServiceTarget: string,
   accessToken: string,
   userStateUrl: string,
-): Promise<{ status: number; userId?: string; version?: string }> {
+): Promise<{ status: number; user_id?: string; version?: string }> {
   try {
     const response = await axios.get(`${opalUserServiceTarget}${userStateUrl}`, {
       headers: {
@@ -25,20 +25,19 @@ async function checkUserExists(
 
     return {
       status: response.status,
-      userId: response.data?.userId,
-      version: response.data?.version,
+      user_id: response.data?.user_id,
+      version: response.headers['etag'],
     };
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       if (status) {
-        // For 409 conflicts, try to extract userId and version from error response
-        const userId = error.response?.data?.userId;
-        const version = error.response?.data?.version;
         return {
           status,
-          userId: userId,
-          version: version,
+          // For 409 conflicts, extract user_id from resourceId
+          user_id: error.response?.data?.resourceId,
+          // Extract version from ETag header (same as success case)
+          version: error.response?.headers['etag'],
         };
       }
 
@@ -97,21 +96,28 @@ async function updateUser(
   version: string,
 ): Promise<boolean> {
   try {
-    const response = await axios.put(
-      `${opalUserServiceTarget}${updateUserUrl}/${userId}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'If-Match': version,
-        },
-      },
-    );
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'If-Match': version,
+    };
+
+    const response = await axios.put(`${opalUserServiceTarget}${updateUserUrl}/${userId}`, {}, { headers });
 
     return response.status === 200;
   } catch (error) {
-    logger.error('Error updating user', error);
+    if (axios.isAxiosError(error)) {
+      logger.error('updateUser axios error', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        message: error.message,
+      });
+    } else {
+      logger.error('updateUser non-axios error', { error: String(error) });
+    }
     return false;
   }
 }
@@ -148,19 +154,21 @@ export async function handleCheckUser(
 
     case 409: {
       logger.info('User conflict detected, attempting to update user');
-      if (!userResult.userId) {
+      if (!userResult.user_id) {
         logger.error('Cannot update user: userId not available');
         return false;
       }
+
       if (!userResult.version) {
         logger.error('Cannot update user: version not available');
         return false;
       }
+
       const updateResult = await updateUser(
         opalUserServiceTarget,
         accessToken,
         config.updateUserUrl,
-        userResult.userId,
+        userResult.user_id,
         userResult.version,
       );
       if (updateResult) {
@@ -173,7 +181,7 @@ export async function handleCheckUser(
     }
 
     default:
-      logger.error('Error during user validation');
+      logger.error('Error during user validation', { status: userResult.status });
       return false;
   }
 }
