@@ -1,7 +1,7 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
   "main": "dist/index",
@@ -93,6 +93,26 @@
     "./interfaces": {
       "import": "./interfaces/index.js",
       "types": "./interfaces/index.d.ts"
+    },
+    "./interfaces/session-expiry-config": {
+      "import": "./interfaces/session-expiry-config.js",
+      "types": "./interfaces/session-expiry-config.d.ts"
+    },
+    "./interfaces/routes-config": {
+      "import": "./interfaces/routes-config.js",
+      "types": "./interfaces/routes-config.d.ts"
+    },
+    "./interfaces/sso-config": {
+      "import": "./interfaces/sso-config.js",
+      "types": "./interfaces/sso-config.d.ts"
+    },
+    "./interfaces/session-config": {
+      "import": "./interfaces/session-config.js",
+      "types": "./interfaces/session-config.d.ts"
+    },
+    "./interfaces/session-storage-config": {
+      "import": "./interfaces/session-storage-config.js",
+      "types": "./interfaces/session-storage-config.d.ts"
     },
     "./session": {
       "import": "./session/index.js",
