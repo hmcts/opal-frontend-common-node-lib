@@ -52,6 +52,11 @@
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.30.1"
   },
+  "resolutions": {
+    "@azure/identity/jws": "4.0.1",
+    "@azure/msal-node/jws": "3.2.3",
+    "jsonwebtoken/jws": "3.2.3"
+  },
   "packageManager": "yarn@1.22.22",
   "exports": {
     ".": {
