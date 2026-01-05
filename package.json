@@ -1,9 +1,13 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hmcts/opal-frontend-common-node-lib"
+  },
   "main": "dist/index",
   "types": "dist/index.d.ts",
   "scripts": {
