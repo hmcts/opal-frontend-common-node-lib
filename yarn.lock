@@ -314,11 +314,11 @@
     levn "^0.4.1"
 
 "@hmcts/info-provider@^1.1.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@hmcts/info-provider/-/info-provider-1.3.0.tgz#fb8fb5729c6fdd89dd950d7176488ad6d0e99e9f"
-  integrity sha512-qoAxSIkTOgetBjyQaou5O+iikh994BM2+LPpZpHZUaEL2T53bPpgp2zPMRYapsKJaqMMjZa2s1aPbeROPHtBWg==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@hmcts/info-provider/-/info-provider-1.4.0.tgz#3f092cca5afd0346a5b7f2f683c44b25f5668d43"
+  integrity sha512-58gSwu7nXpSClIpYlmsRu3XBMsyEwqiDHYaYevpRxZK3XE8i5sJwN/r796dms1UZ9kacPd29C3YdSRnIA0a2hQ==
   dependencies:
-    js-yaml "^4.1.0"
+    js-yaml "^4.1.1"
 
 "@hmcts/nodejs-healthcheck@^1.8.5":
   version "1.8.6"
@@ -1777,7 +1777,7 @@ isstream@0.1.x:
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
   integrity sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==
 
-js-yaml@^4.0.0, js-yaml@^4.1.0, js-yaml@^4.1.1:
+js-yaml@^4.0.0, js-yaml@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.1.1.tgz#854c292467705b699476e1a2decc0c8a3458806b"
   integrity sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==
