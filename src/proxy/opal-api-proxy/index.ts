@@ -11,6 +11,8 @@ const opalApiProxy = (opalApiTarget: string) => {
         if (req.session.securityToken?.access_token) {
           proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
         }
+
+        proxyReq.setHeader('x-user-ip', req.ip || 'unknown');
       },
     },
   });
