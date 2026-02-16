@@ -1011,9 +1011,9 @@ concat-map@0.0.1:
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
 
 config@^4.0.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/config/-/config-4.2.0.tgz#8395618964f669bc8f9c905b7185999073b9d462"
-  integrity sha512-mk+ugmNm+BWc2YRlwmuJkORUvUyEP6w9cDUKU2sljFLYI4StXjqGDqQTA2wITi8sYaRdC/PGOuktqy7+Y4PApw==
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/config/-/config-4.3.0.tgz#3310b972ac785e8124ec891d1cce81f767bf4561"
+  integrity sha512-nY/JbYPBxOCTC+Kj9dUf21t49VxwsL6GXRsAxlTY9N6MBTx/6TBQgT2t5PsAY+XUCMCNudARJPevUZeN3NhyHQ==
   dependencies:
     json5 "^2.2.3"
 
