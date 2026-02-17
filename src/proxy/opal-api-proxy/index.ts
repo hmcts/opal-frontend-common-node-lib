@@ -1,6 +1,9 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { Logger } from '@hmcts/nodejs-logging';
 
-const opalApiProxy = (opalApiTarget: string) => {
+const logger = Logger.getLogger('opalApiProxy');
+
+const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
   return createProxyMiddleware({
     target: opalApiTarget,
     changeOrigin: true,
@@ -10,6 +13,12 @@ const opalApiProxy = (opalApiTarget: string) => {
       proxyReq: (proxyReq, req: any) => {
         if (req.session.securityToken?.access_token) {
           proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
+        }
+
+        const requestIp = req.ip || 'unknown';
+        proxyReq.setHeader('x-user-ip', requestIp);
+        if (logEnabled) {
+          logger.info(`client ip: ${requestIp}`);
         }
       },
     },
