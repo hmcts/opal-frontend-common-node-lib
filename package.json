@@ -16,8 +16,8 @@
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
     "prettier:fix": "prettier --write \"./src/**/*.{ts,js,json}\"",
-    "audit:save": "yarn audit --recursive --environment production --json > yarn-known-issues || true",
-    "audit:check": "yarn audit --recursive --environment production --json > yarn-known-issues-current || true && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues-current > current-ids.json && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues > known-ids.json && diff -q known-ids.json current-ids.json || (echo '❌ New vulnerabilities detected. Please review.' && exit 1)"
+    "audit:save": "yarn npm audit --recursive --environment production --json > yarn-known-issues || true",
+    "audit:check": "yarn npm audit --recursive --environment production --json > yarn-known-issues-current || true && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues-current > current-ids.json && jq -s '[.[] | select(.type==\"auditAdvisory\") | .data.advisory.id] | sort' yarn-known-issues > known-ids.json && diff -q known-ids.json current-ids.json || (echo '❌ New vulnerabilities detected. Please review.' && exit 1)"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.0.0",
@@ -56,7 +56,7 @@
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.30.1"
   },
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "yarn@4.12.0",
   "exports": {
     ".": {
       "import": "./index.js",
