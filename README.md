@@ -11,6 +11,7 @@ This is a shared Node.js library containing common middleware, configurations, a
 - [Getting Started](#getting-started)
 - [Scripts](#scripts)
 - [Build Process](#build-process)
+- [Release Checklist](#release-checklist)
 - [Linting and Formatting](#linting-and-formatting)
 - [Exports](#exports)
 - [Using This Library in a Node.js Application](#using-this-library-in-a-nodejs-application)
@@ -99,6 +100,22 @@ After this new version of the library is published, any consuming application sh
     ```bash
     yarn import:published:common-node-lib
     ```
+
+## Release Checklist
+
+Before creating a GitHub release tag:
+
+1. Update `package.json` version to the intended release version.
+2. Add a `CHANGELOG.md` entry under `## [Unreleased]` describing user-visible changes.
+3. Run:
+
+   ```bash
+   yarn build
+   npm pack --dry-run
+   ```
+
+4. Ensure export map changes are intentional and non-breaking (or include release notes/version bump for breaking changes).
+5. Create a GitHub release with a tag matching `package.json` version (`vX.Y.Z` or `X.Y.Z`).
 
 ## Linting and Formatting
 

@@ -148,6 +148,23 @@ jobs:
         id: release
         uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
 
+      - name: Validate release tag matches package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+          const tag = process.env.RELEASE_TAG || '';
+          const normalizedTag = tag.startsWith('v') ? tag.slice(1) : tag;
+
+          if (normalizedTag !== pkg.version) {
+            console.error(`Release tag (${tag}) does not match package.json version (${pkg.version}).`);
+            process.exit(1);
+          }
+          NODE
+
       - name: Setup Node.js (Release)
         uses: actions/setup-node@v6
         with:
