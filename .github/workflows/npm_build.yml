@@ -39,6 +39,21 @@ jobs:
       - name: Build library
         run: yarn build
 
+      - name: Smoke test package exports (ESM)
+        run: |
+          node --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
+          const runtimeSpecifiers = Object.entries(pkg.exports)
+            .filter(([, exportConditions]) => typeof exportConditions === 'object' && exportConditions.import)
+            .map(([subpath]) => (subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`));
+
+          for (const specifier of runtimeSpecifiers) {
+            await import(specifier);
+          }
+          NODE
+
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarqube-scan-action@v7.0.0
         env:
@@ -82,6 +97,21 @@ jobs:
 
       - name: Build library (Release)
         run: yarn build
+
+      - name: Smoke test package exports (ESM) (Release)
+        run: |
+          node --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
+          const runtimeSpecifiers = Object.entries(pkg.exports)
+            .filter(([, exportConditions]) => typeof exportConditions === 'object' && exportConditions.import)
+            .map(([subpath]) => (subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`));
+
+          for (const specifier of runtimeSpecifiers) {
+            await import(specifier);
+          }
+          NODE
 
       - name: Publish version (OIDC via npm)
         run: |

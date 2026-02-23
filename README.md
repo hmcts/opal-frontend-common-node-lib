@@ -24,6 +24,7 @@ Ensure you have the following installed:
 
 - [Node.js](https://nodejs.org/) v18 or later
 - [Yarn](https://classic.yarnpkg.com/) v1.22.22 or later
+- ESM-compatible consumer setup (`import` syntax). CommonJS `require()` is not supported.
 
 ### Install Dependencies
 
