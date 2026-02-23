@@ -84,7 +84,6 @@ jobs:
         run: yarn build
 
       - name: Publish version (OIDC via npm)
-        working-directory: dist
         run: |
           # Ensure we do NOT publish using token-based auth (classic/granular).
           unset NODE_AUTH_TOKEN

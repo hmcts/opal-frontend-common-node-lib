@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Jwt } from '../../utils';
+import { Jwt } from '../../utils/index.js';
 
 /**
  * Handles the SSO logout stub endpoint.

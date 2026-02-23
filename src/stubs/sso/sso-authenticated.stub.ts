@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Jwt } from '../../utils';
+import { Jwt } from '../../utils/index.js';
 
 /**
  * Middleware stub that validates whether the current request is authenticated via a JWT stored on the session.

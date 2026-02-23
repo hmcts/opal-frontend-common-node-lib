@@ -1,5 +1,5 @@
-import AppInsightsConfig from './app-insights-config';
-import LaunchDarklyConfig from './launch-darkly-config';
+import AppInsightsConfig from './app-insights-config.js';
+import LaunchDarklyConfig from './launch-darkly-config.js';
 
 class TransferServerState {
   launchDarklyConfig!: LaunchDarklyConfig;

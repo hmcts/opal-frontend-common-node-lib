@@ -39,7 +39,7 @@ Run the following to build the project:
 yarn build
 ```
 
-The compiled output will be available in the `dist/` folder. It includes `index.js`, type declarations, and any exported modules listed in the `exports` field.
+The compiled output will be available in the `dist/` folder. It includes runtime JS and type declarations for the package exports.
 
 ## Switching Between Local and Published Versions
 
@@ -62,11 +62,11 @@ To use a local version of this library during development in another project:
    yarn build
    ```
 
-2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to the local build:
+2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to this library repository root (not `dist/`):
 
    ```bash
    # In your shell config file (.zshrc, .bash_profile, or .bashrc)
-   export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB DIST FOLDER]"
+   export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB REPOSITORY ROOT]"
    ```
 
 3. In the consuming project (e.g. `opal-frontend`), run:
@@ -75,7 +75,7 @@ To use a local version of this library during development in another project:
    yarn import:local:common-node-lib
    ```
 
-   This will remove the published version and install the local build using the path provided.
+   This will remove the published version and install the local package using the path provided.
 
 4. To switch back to the published version:
    ```bash

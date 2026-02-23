@@ -1,1 +1,1 @@
-export { Jwt } from './jwt';
+export { Jwt } from './jwt.js';

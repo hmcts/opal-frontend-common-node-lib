@@ -1,6 +1,6 @@
 process.env['APPLICATIONINSIGHTS_CONFIGURATION_CONTENT'] = '{}';
 import * as appInsights from 'applicationinsights';
-import AppInsightConfig from '../interfaces/app-insights-config';
+import AppInsightConfig from '../interfaces/app-insights-config.js';
 
 // As of 2.9.0 issue reading bundled applicationinsights.json
 // https://github.com/microsoft/ApplicationInsights-node.js/issues/1226
