@@ -34,6 +34,10 @@ Apply these rules when reviewing changes in this Node.js library; focus on P0/P1
 - Do not break the published API surface without a version bump and release notes.
 - Keep `package.json` exports, `src/index.ts`, and `tsconfig.json` paths in sync for any public module change.
 - Do not introduce deep-import-only usage that bypasses the `exports` map.
+- Every `package.json` export target (`import` and `types`) must resolve to real files in `dist/`.
+- `yarn check:pack-shape` (or `npm pack --dry-run` + equivalent validation) must pass for package-surface changes.
+- Packed tarball must include all files referenced by `exports`, `types`, and `typesVersions`, including copied ambient `.d.ts`.
+- Do not split publish metadata across multiple manifests (for example by generating `dist/package.json`).
 - Avoid TypeScript errors, failing lint/prettier, or build regressions.
 
 ## P1 Rules (High Priority)
@@ -49,6 +53,12 @@ Apply these rules when reviewing changes in this Node.js library; focus on P0/P1
 - Prefer explicit types for exported APIs; avoid `any` in public interfaces.
 - Keep functions small and single-purpose; extract helpers for readability.
 - Use consistent error shapes and typed config interfaces.
+
+### Packaging and ESM Compatibility
+
+- For exported ESM files, ensure runtime-resolved relative imports remain Node-compatible after emit (no broken extensionless paths).
+- If a PR tightens exports/subpaths, require a clear consumer impact note and migration import examples.
+- Prefer local consumer validation via `yarn pack:local` tarball installs; flag raw-repo-link workflows that bypass publish behavior.
 
 ### Dependency and Performance Risk
 
