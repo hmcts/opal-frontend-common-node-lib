@@ -24,7 +24,7 @@ This is a shared Node.js library containing common middleware, configurations, a
 Ensure you have the following installed:
 
 - [Node.js](https://nodejs.org/) v18 or later
-- [Yarn](https://classic.yarnpkg.com/) v1.22.22 or later
+- [Yarn](https://yarnpkg.com/) v4.x (Berry)
 - ESM-compatible consumer setup (`import` syntax). CommonJS `require()` is not supported.
 
 ### Install Dependencies
@@ -41,7 +41,7 @@ Run the following to build the project:
 yarn build
 ```
 
-The compiled output will be available in the `dist/` folder. It includes runtime JS and type declarations for the package exports.
+The compiled output will be available in the `dist/` folder. It includes runtime JavaScript and generated type declarations based on the TypeScript build configuration.
 
 ## Switching Between Local and Published Versions
 
@@ -58,11 +58,13 @@ To use a published version of this library during development in another project
 
 To use a local version of this library during development in another project:
 
-1. Build this library:
+1. Build and pack this library:
 
    ```bash
-   yarn build
+   yarn pack:local
    ```
+
+   This will generate a `.tgz` file (e.g. `hmcts-opal-frontend-common-node-X.Y.Z.tgz`) in the repository root.
 
 2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to this library repository root (not `dist/`):
 
@@ -77,9 +79,10 @@ To use a local version of this library during development in another project:
    yarn import:local:common-node-lib
    ```
 
-   This will remove the published version and install the local package using the path provided.
+   This will remove the currently installed version and install the locally packed `.tgz` artifact. Installing the tarball (rather than linking the repository folder directly) ensures the consuming project uses the same publish shape as npm, avoiding TypeScript and export-map resolution issues.
 
 4. To switch back to the published version:
+
    ```bash
    yarn import:published:common-node-lib
    ```
@@ -175,7 +178,10 @@ Refer to the `exports` block in `package.json` for the full list of available mo
 The following commands are available in the `package.json`:
 
 - `yarn build`  
-  Cleans the `dist/` folder, compiles TypeScript, and copies relevant files to `dist/`.
+  Cleans the `dist/` folder and compiles TypeScript into the publishable `dist/` output.
+
+- `yarn pack:local`  
+  Builds the project (via the `prepack` hook) and creates a local `.tgz` package that mirrors the published npm artifact. Useful for testing changes in a consuming application.
 
 - `yarn clean`  
   Removes the `dist/` directory.
