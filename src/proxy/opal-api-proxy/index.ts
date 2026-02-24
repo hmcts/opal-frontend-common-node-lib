@@ -15,7 +15,9 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
           proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
         }
 
-        const requestIp = req.ip || 'unknown';
+        const forwardedForHeader = req.headers?.['x-forwarded-for'];
+        const forwardedFor = Array.isArray(forwardedForHeader) ? forwardedForHeader.join(',') : forwardedForHeader;
+        const requestIp = forwardedFor?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
         proxyReq.setHeader('x-user-ip', requestIp);
         if (logEnabled) {
           logger.info(`client ip: ${requestIp}`);
