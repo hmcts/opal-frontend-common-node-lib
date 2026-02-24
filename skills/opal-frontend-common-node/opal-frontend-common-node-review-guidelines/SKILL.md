@@ -17,6 +17,7 @@ Apply these rules when reviewing changes in this Node.js library; focus on P0/P1
 ## Repo Scope
 
 - This is an ESM TypeScript library built with `tsc` and published via `package.json` exports.
+- Runtime baseline is Node.js 18+.
 - Consumers are Node/Express services in the OPAL ecosystem.
 
 ## P0 Rules (Blockers)
@@ -32,6 +33,7 @@ Apply these rules when reviewing changes in this Node.js library; focus on P0/P1
 
 - Do not break the published API surface without a version bump and release notes.
 - Keep `package.json` exports, `src/index.ts`, and `tsconfig.json` paths in sync for any public module change.
+- Do not introduce deep-import-only usage that bypasses the `exports` map.
 - Avoid TypeScript errors, failing lint/prettier, or build regressions.
 
 ## P1 Rules (High Priority)

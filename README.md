@@ -181,7 +181,7 @@ The following commands are available in the `package.json`:
   Cleans the `dist/` folder and compiles TypeScript into the publishable `dist/` output.
 
 - `yarn pack:local`  
-  Builds the project (via the `prepack` hook) and creates a local `.tgz` package that mirrors the published npm artifact. Useful for testing changes in a consuming application.
+  Builds the project (via the `prepack` hook), removes old local tarballs, and creates a fresh `.tgz` package that mirrors the published npm artifact. Useful for testing changes in a consuming application.
 
 - `yarn clean`  
   Removes the `dist/` directory.

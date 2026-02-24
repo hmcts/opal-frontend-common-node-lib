@@ -40,96 +40,51 @@ jobs:
         run: yarn build
 
       - name: Validate export targets exist
-        run: |
-          node - <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-          const failures = [];
-
-          for (const [subpath, exportDefinition] of Object.entries(pkg.exports || {})) {
-            if (typeof exportDefinition === 'string') {
-              const resolved = path.resolve(exportDefinition.replace(/^\.\//, ''));
-              if (!fs.existsSync(resolved)) {
-                failures.push(`${subpath} -> ${exportDefinition}`);
-              }
-              continue;
-            }
-
-            for (const [condition, target] of Object.entries(exportDefinition)) {
-              if (typeof target !== 'string') {
-                continue;
-              }
-              const resolved = path.resolve(target.replace(/^\.\//, ''));
-              if (!fs.existsSync(resolved)) {
-                failures.push(`${subpath} (${condition}) -> ${target}`);
-              }
-            }
-          }
-
-          if (failures.length) {
-            console.error('Missing export targets:');
-            for (const failure of failures) {
-              console.error(`- ${failure}`);
-            }
-            process.exit(1);
-          }
-          NODE
+        run: yarn check:exports
 
       - name: Validate npm pack publish shape
-        run: |
-          npm_config_cache="$RUNNER_TEMP/npm-cache" npm pack --dry-run --json > pack-output.json
-          node - <<'NODE'
-          const fs = require('node:fs');
-
-          const [{ files }] = JSON.parse(fs.readFileSync('./pack-output.json', 'utf-8'));
-          const required = ['package.json', 'README.md', 'LICENSE', 'dist/index.js', 'dist/index.d.ts'];
-          const allowedRootFiles = new Set(['package.json', 'README.md', 'LICENSE']);
-
-          const fileSet = new Set(files.map((entry) => entry.path));
-          const missingRequired = required.filter((file) => !fileSet.has(file));
-          const unexpected = files
-            .map((entry) => entry.path)
-            .filter((file) => !file.startsWith('dist/') && !allowedRootFiles.has(file));
-
-          if (missingRequired.length || unexpected.length) {
-            if (missingRequired.length) {
-              console.error('Missing required packed files:');
-              for (const file of missingRequired) {
-                console.error(`- ${file}`);
-              }
-            }
-            if (unexpected.length) {
-              console.error('Unexpected packed files:');
-              for (const file of unexpected) {
-                console.error(`- ${file}`);
-              }
-            }
-            process.exit(1);
-          }
-          NODE
-          rm -f pack-output.json
+        run: yarn check:pack-shape
 
       - name: Smoke test package exports (ESM)
-        run: |
-          node --input-type=module - <<'NODE'
-          import { readFileSync } from 'node:fs';
-
-          const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
-          const runtimeSpecifiers = Object.entries(pkg.exports)
-            .filter(([, exportConditions]) => typeof exportConditions === 'object' && exportConditions.import)
-            .map(([subpath]) => (subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`));
-
-          for (const specifier of runtimeSpecifiers) {
-            await import(specifier);
-          }
-          NODE
+        run: yarn check:exports:esm
 
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarqube-scan-action@v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  node18-compat:
+    name: Node 18 Compatibility
+    if: github.event_name != 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js (18)
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18.x'
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.12.0 --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build library
+        run: yarn build
+
+      - name: Validate export targets exist
+        run: yarn check:exports
+
+      - name: Validate npm pack publish shape
+        run: yarn check:pack-shape
+
+      - name: Smoke test package exports (ESM)
+        run: yarn check:exports:esm
 
   release:
     name: Release and Publish
@@ -142,11 +97,7 @@ jobs:
       - name: Checkout repository (Release)
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.target_commitish }}
-
-      - name: Validate and extract release information
-        id: release
-        uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
+          ref: refs/tags/${{ github.event.release.tag_name }}
 
       - name: Validate release tag matches package version
         env:
@@ -188,91 +139,13 @@ jobs:
         run: yarn build
 
       - name: Validate export targets exist (Release)
-        run: |
-          node - <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-          const failures = [];
-
-          for (const [subpath, exportDefinition] of Object.entries(pkg.exports || {})) {
-            if (typeof exportDefinition === 'string') {
-              const resolved = path.resolve(exportDefinition.replace(/^\.\//, ''));
-              if (!fs.existsSync(resolved)) {
-                failures.push(`${subpath} -> ${exportDefinition}`);
-              }
-              continue;
-            }
-
-            for (const [condition, target] of Object.entries(exportDefinition)) {
-              if (typeof target !== 'string') {
-                continue;
-              }
-              const resolved = path.resolve(target.replace(/^\.\//, ''));
-              if (!fs.existsSync(resolved)) {
-                failures.push(`${subpath} (${condition}) -> ${target}`);
-              }
-            }
-          }
-
-          if (failures.length) {
-            console.error('Missing export targets:');
-            for (const failure of failures) {
-              console.error(`- ${failure}`);
-            }
-            process.exit(1);
-          }
-          NODE
+        run: yarn check:exports
 
       - name: Validate npm pack publish shape (Release)
-        run: |
-          npm_config_cache="$RUNNER_TEMP/npm-cache" npm pack --dry-run --json > pack-output.json
-          node - <<'NODE'
-          const fs = require('node:fs');
-
-          const [{ files }] = JSON.parse(fs.readFileSync('./pack-output.json', 'utf-8'));
-          const required = ['package.json', 'README.md', 'LICENSE', 'dist/index.js', 'dist/index.d.ts'];
-          const allowedRootFiles = new Set(['package.json', 'README.md', 'LICENSE']);
-
-          const fileSet = new Set(files.map((entry) => entry.path));
-          const missingRequired = required.filter((file) => !fileSet.has(file));
-          const unexpected = files
-            .map((entry) => entry.path)
-            .filter((file) => !file.startsWith('dist/') && !allowedRootFiles.has(file));
-
-          if (missingRequired.length || unexpected.length) {
-            if (missingRequired.length) {
-              console.error('Missing required packed files:');
-              for (const file of missingRequired) {
-                console.error(`- ${file}`);
-              }
-            }
-            if (unexpected.length) {
-              console.error('Unexpected packed files:');
-              for (const file of unexpected) {
-                console.error(`- ${file}`);
-              }
-            }
-            process.exit(1);
-          }
-          NODE
-          rm -f pack-output.json
+        run: yarn check:pack-shape
 
       - name: Smoke test package exports (ESM) (Release)
-        run: |
-          node --input-type=module - <<'NODE'
-          import { readFileSync } from 'node:fs';
-
-          const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
-          const runtimeSpecifiers = Object.entries(pkg.exports)
-            .filter(([, exportConditions]) => typeof exportConditions === 'object' && exportConditions.import)
-            .map(([subpath]) => (subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`));
-
-          for (const specifier of runtimeSpecifiers) {
-            await import(specifier);
-          }
-          NODE
+        run: yarn check:exports:esm
 
       - name: Publish version (OIDC via npm)
         run: |

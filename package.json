@@ -18,9 +18,62 @@
       "types": [
         "dist/global.d.ts"
       ],
-      "*": [
-        "dist/*/index.d.ts",
-        "dist/*.d.ts"
+      "app-insights": [
+        "dist/app-insights/index.d.ts"
+      ],
+      "health": [
+        "dist/health/index.d.ts"
+      ],
+      "helmet": [
+        "dist/helmet/index.d.ts"
+      ],
+      "launch-darkly": [
+        "dist/launch-darkly/index.d.ts"
+      ],
+      "properties-volume": [
+        "dist/properties-volume/index.d.ts"
+      ],
+      "csrf-token": [
+        "dist/csrf-token/index.d.ts"
+      ],
+      "routes": [
+        "dist/routes/index.d.ts"
+      ],
+      "services": [
+        "dist/services/index.d.ts"
+      ],
+      "interfaces": [
+        "dist/interfaces/index.d.ts"
+      ],
+      "interfaces/session-expiry-config": [
+        "dist/interfaces/session-expiry-config.d.ts"
+      ],
+      "interfaces/routes-config": [
+        "dist/interfaces/routes-config.d.ts"
+      ],
+      "interfaces/sso-config": [
+        "dist/interfaces/sso-config.d.ts"
+      ],
+      "interfaces/session-config": [
+        "dist/interfaces/session-config.d.ts"
+      ],
+      "interfaces/session-storage-config": [
+        "dist/interfaces/session-storage-config.d.ts"
+      ],
+      "session": [
+        "dist/session/index.d.ts"
+      ],
+      "session/session-storage": [
+        "dist/session/session-storage/index.d.ts"
+      ],
+      "session/session-expiry": [
+        "dist/session/session-expiry/index.d.ts"
+      ],
+      "proxy": [
+        "dist/proxy/index.d.ts"
+      ],
+      "proxy/opal-api-proxy": [
+        "dist/proxy/opal-api-proxy/index.d.ts"
       ]
     }
   },
@@ -32,6 +85,11 @@
   "sideEffects": false,
   "scripts": {
     "build": "yarn clean && tsc && cp src/*.d.ts dist/",
+    "prepack": "yarn build",
+    "pack:local": "find . -maxdepth 1 -type f -name 'hmcts-opal-frontend-common-node-*.tgz' -delete && npm_config_cache=${TMPDIR:-/tmp}/npm-cache-opal-common-node npm pack",
+    "check:exports": "node scripts/validate-export-targets.cjs",
+    "check:pack-shape": "node scripts/validate-pack-shape.cjs",
+    "check:exports:esm": "node scripts/smoke-test-exports.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",

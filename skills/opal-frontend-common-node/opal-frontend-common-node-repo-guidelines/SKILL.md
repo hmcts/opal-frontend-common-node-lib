@@ -11,11 +11,12 @@ Use these rules to keep work aligned with the library structure, build tooling, 
 ## Project Structure
 - `src/` contains TypeScript source organized by feature folders (`app-insights/`, `csrf-token/`, `health/`, `helmet/`, `session/`, etc.).
 - `src/interfaces/` holds shared types; `src/index.ts` re-exports public modules.
-- `src/*.d.ts` and `src/global.d.ts` provide ambient typings and are copied to `dist/`.
+- `src/*.d.ts` (for example `src/global.d.ts` and `src/session.d.ts`) provide ambient typings and are copied to `dist/` by the build.
 - `dist/` is build output and should be generated via `yarn build` (do not hand-edit).
 
 ## Build, Lint, and Audit Commands
-- `yarn build` runs `clean`, compiles TypeScript, and copies `package.json`, root `.d.ts` files, and `README.md` to `dist/`.
+- `yarn build` runs `clean`, compiles TypeScript, and copies root ambient `.d.ts` files to `dist/`.
+- `yarn pack:local` runs `prepack` (`yarn build`) and creates a fresh local `.tgz` artifact in repo root for consumer testing.
 - `yarn clean` removes `dist/`.
 - `yarn lint` runs ESLint over `src/` and Prettier checks.
 - `yarn prettier` checks formatting; `yarn prettier:fix` formats in place.
@@ -29,6 +30,7 @@ Use these rules to keep work aligned with the library structure, build tooling, 
   - `src/index.ts` (top-level re-exports)
   - `tsconfig.json` `paths` (local TS resolution)
   - `src/<module>/index.ts` (module-local exports)
+  - `typesVersions` (if needed for legacy TS resolver compatibility)
   - any required ambient `.d.ts` in `src/` so it is copied to `dist/`
 
 ## Coding Style
@@ -37,9 +39,11 @@ Use these rules to keep work aligned with the library structure, build tooling, 
 - Prefer small, focused modules; avoid unnecessary side effects at import time.
 
 ## Tooling and Environment
-- Node.js v18+ and Yarn classic v1.22.22 (per `package.json` and `README.md`).
+- Node.js v18+ and Yarn v4.x (Berry) (per `package.json` and `README.md`).
 - `tsconfig.json` uses strict mode; avoid `any` and keep types explicit.
 
 ## Publishing
 - Bump the version in `package.json`, create a GitHub release with that tag, and wait for the release workflow to publish (see `README.md`).
 - `dist/` is generated during `yarn build` and is not committed.
+- Publish from the repository root `package.json` (single source of truth). Do not copy `package.json` into `dist/`.
+- For local consumer testing, install from the generated `.tgz` (`yarn pack:local`) rather than linking the raw repository folder.
