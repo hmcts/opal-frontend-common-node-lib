@@ -4,14 +4,92 @@
   "version": "0.0.26",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/hmcts/opal-frontend-common-node-lib"
   },
-  "main": "dist/index",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/global.d.ts"
+      ],
+      "app-insights": [
+        "dist/app-insights/index.d.ts"
+      ],
+      "health": [
+        "dist/health/index.d.ts"
+      ],
+      "helmet": [
+        "dist/helmet/index.d.ts"
+      ],
+      "launch-darkly": [
+        "dist/launch-darkly/index.d.ts"
+      ],
+      "properties-volume": [
+        "dist/properties-volume/index.d.ts"
+      ],
+      "csrf-token": [
+        "dist/csrf-token/index.d.ts"
+      ],
+      "routes": [
+        "dist/routes/index.d.ts"
+      ],
+      "services": [
+        "dist/services/index.d.ts"
+      ],
+      "interfaces": [
+        "dist/interfaces/index.d.ts"
+      ],
+      "interfaces/session-expiry-config": [
+        "dist/interfaces/session-expiry-config.d.ts"
+      ],
+      "interfaces/routes-config": [
+        "dist/interfaces/routes-config.d.ts"
+      ],
+      "interfaces/sso-config": [
+        "dist/interfaces/sso-config.d.ts"
+      ],
+      "interfaces/session-config": [
+        "dist/interfaces/session-config.d.ts"
+      ],
+      "interfaces/session-storage-config": [
+        "dist/interfaces/session-storage-config.d.ts"
+      ],
+      "session": [
+        "dist/session/index.d.ts"
+      ],
+      "session/session-storage": [
+        "dist/session/session-storage/index.d.ts"
+      ],
+      "session/session-expiry": [
+        "dist/session/session-expiry/index.d.ts"
+      ],
+      "proxy": [
+        "dist/proxy/index.d.ts"
+      ],
+      "proxy/opal-api-proxy": [
+        "dist/proxy/opal-api-proxy/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "build": " yarn clean && tsc && cp package.json dist/ && cp src/*.d.ts dist/ && cp README.md dist/",
+    "build": "yarn clean && tsc && cp src/*.d.ts dist/",
+    "prepack": "yarn build",
+    "pack:local": "find . -maxdepth 1 -type f -name 'hmcts-opal-frontend-common-node-*.tgz' -delete && npm_config_cache=${TMPDIR:-/tmp}/npm-cache-opal-common-node npm pack",
+    "check:exports": "node scripts/validate-export-targets.cjs",
+    "check:pack-shape": "node scripts/validate-pack-shape.cjs",
+    "check:exports:esm": "node scripts/smoke-test-exports.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
@@ -37,7 +115,6 @@
     "helmet": "^8.0.0",
     "http-proxy-middleware": "^3.0.0",
     "luxon": "^3.4.3",
-    "prettier": "^3.0.3",
     "redis": "^5.0.0",
     "session-file-store": "^1.5.0",
     "xml2js": "^0.6.2"
@@ -53,97 +130,94 @@
     "@typescript-eslint/parser": "8.56.1",
     "eslint": "^10.0.0",
     "eslint-plugin-prettier": "^5.2.6",
+    "prettier": "^3.0.3",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.30.1"
   },
   "packageManager": "yarn@4.12.0",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "types": "./index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./app-insights": {
-      "import": "./app-insights/index.js",
-      "types": "./app-insights/index.d.ts"
+      "import": "./dist/app-insights/index.js",
+      "types": "./dist/app-insights/index.d.ts"
     },
     "./health": {
-      "import": "./health/index.js",
-      "types": "./health/index.d.ts"
+      "import": "./dist/health/index.js",
+      "types": "./dist/health/index.d.ts"
     },
     "./helmet": {
-      "import": "./helmet/index.js",
-      "types": "./helmet/index.d.ts"
+      "import": "./dist/helmet/index.js",
+      "types": "./dist/helmet/index.d.ts"
     },
     "./launch-darkly": {
-      "import": "./launch-darkly/index.js",
-      "types": "./launch-darkly/index.d.ts"
+      "import": "./dist/launch-darkly/index.js",
+      "types": "./dist/launch-darkly/index.d.ts"
     },
     "./properties-volume": {
-      "import": "./properties-volume/index.js",
-      "types": "./properties-volume/index.d.ts"
+      "import": "./dist/properties-volume/index.js",
+      "types": "./dist/properties-volume/index.d.ts"
     },
     "./csrf-token": {
-      "import": "./csrf-token/index.js",
-      "types": "./csrf-token/index.d.ts"
+      "import": "./dist/csrf-token/index.js",
+      "types": "./dist/csrf-token/index.d.ts"
     },
     "./routes": {
-      "import": "./routes/index.js",
-      "types": "./routes/index.d.ts"
+      "import": "./dist/routes/index.js",
+      "types": "./dist/routes/index.d.ts"
     },
     "./services": {
-      "import": "./services/index.js",
-      "types": "./services/index.d.ts"
+      "import": "./dist/services/index.js",
+      "types": "./dist/services/index.d.ts"
     },
     "./interfaces": {
-      "import": "./interfaces/index.js",
-      "types": "./interfaces/index.d.ts"
+      "import": "./dist/interfaces/index.js",
+      "types": "./dist/interfaces/index.d.ts"
     },
     "./interfaces/session-expiry-config": {
-      "import": "./interfaces/session-expiry-config.js",
-      "types": "./interfaces/session-expiry-config.d.ts"
+      "import": "./dist/interfaces/session-expiry-config.js",
+      "types": "./dist/interfaces/session-expiry-config.d.ts"
     },
     "./interfaces/routes-config": {
-      "import": "./interfaces/routes-config.js",
-      "types": "./interfaces/routes-config.d.ts"
+      "import": "./dist/interfaces/routes-config.js",
+      "types": "./dist/interfaces/routes-config.d.ts"
     },
     "./interfaces/sso-config": {
-      "import": "./interfaces/sso-config.js",
-      "types": "./interfaces/sso-config.d.ts"
+      "import": "./dist/interfaces/sso-config.js",
+      "types": "./dist/interfaces/sso-config.d.ts"
     },
     "./interfaces/session-config": {
-      "import": "./interfaces/session-config.js",
-      "types": "./interfaces/session-config.d.ts"
+      "import": "./dist/interfaces/session-config.js",
+      "types": "./dist/interfaces/session-config.d.ts"
     },
     "./interfaces/session-storage-config": {
-      "import": "./interfaces/session-storage-config.js",
-      "types": "./interfaces/session-storage-config.d.ts"
+      "import": "./dist/interfaces/session-storage-config.js",
+      "types": "./dist/interfaces/session-storage-config.d.ts"
     },
     "./session": {
-      "import": "./session/index.js",
-      "types": "./session/index.d.ts"
+      "import": "./dist/session/index.js",
+      "types": "./dist/session/index.d.ts"
     },
     "./session/session-storage": {
-      "import": "./session/session-storage/index.js",
-      "types": "./session/session-storage/index.d.ts"
+      "import": "./dist/session/session-storage/index.js",
+      "types": "./dist/session/session-storage/index.d.ts"
     },
     "./session/session-expiry": {
-      "import": "./session/session-expiry/index.js",
-      "types": "./session/session-expiry/index.d.ts"
-    },
-    "./session/session-user-state": {
-      "import": "./session/session-user-state/index.js",
-      "types": "./session/session-user-state/index.d.ts"
+      "import": "./dist/session/session-expiry/index.js",
+      "types": "./dist/session/session-expiry/index.d.ts"
     },
     "./proxy": {
-      "import": "./proxy/index.js",
-      "types": "./proxy/index.d.ts"
+      "import": "./dist/proxy/index.js",
+      "types": "./dist/proxy/index.d.ts"
     },
     "./proxy/opal-api-proxy": {
-      "import": "./proxy/opal-api-proxy/index.js",
-      "types": "./proxy/opal-api-proxy/index.d.ts"
+      "import": "./dist/proxy/opal-api-proxy/index.js",
+      "types": "./dist/proxy/opal-api-proxy/index.d.ts"
     },
     "./types": {
-      "types": "./global.d.ts"
+      "types": "./dist/global.d.ts"
     }
   }
 }

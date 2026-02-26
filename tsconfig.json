@@ -1,11 +1,12 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
     "noImplicitOverride": true,
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "NodeNext",
     "lib": ["ES2022", "dom"],
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
@@ -17,7 +18,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": false,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "@hmcts/opal-frontend-common-node": [
@@ -58,9 +59,6 @@
       ],
       "@hmcts/opal-frontend-common-node/session/session-expiry/*": [
         "./src/session/session-expiry/*",
-      ],
-      "@hmcts/opal-frontend-common-node/session/session-user-state/*": [
-        "./src/session/session-user-state/*",
       ],
       "@hmcts/opal-frontend-common-node/session/session-storage/*": [
         "./src/session/session-storage/*",

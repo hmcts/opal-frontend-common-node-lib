@@ -11,6 +11,7 @@ This is a shared Node.js library containing common middleware, configurations, a
 - [Getting Started](#getting-started)
 - [Scripts](#scripts)
 - [Build Process](#build-process)
+- [Release Checklist](#release-checklist)
 - [Linting and Formatting](#linting-and-formatting)
 - [Exports](#exports)
 - [Using This Library in a Node.js Application](#using-this-library-in-a-nodejs-application)
@@ -23,7 +24,8 @@ This is a shared Node.js library containing common middleware, configurations, a
 Ensure you have the following installed:
 
 - [Node.js](https://nodejs.org/) v18 or later
-- [Yarn](https://classic.yarnpkg.com/) v1.22.22 or later
+- [Yarn](https://yarnpkg.com/) v4.x (Berry)
+- ESM-compatible consumer setup (`import` syntax). CommonJS `require()` is not supported.
 
 ### Install Dependencies
 
@@ -39,7 +41,7 @@ Run the following to build the project:
 yarn build
 ```
 
-The compiled output will be available in the `dist/` folder. It includes `index.js`, type declarations, and any exported modules listed in the `exports` field.
+The compiled output will be available in the `dist/` folder. It includes runtime JavaScript and generated type declarations based on the TypeScript build configuration.
 
 ## Switching Between Local and Published Versions
 
@@ -56,17 +58,19 @@ To use a published version of this library during development in another project
 
 To use a local version of this library during development in another project:
 
-1. Build this library:
+1. Build and pack this library:
 
    ```bash
-   yarn build
+   yarn pack:local
    ```
 
-2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to the local build:
+   This will generate a `.tgz` file (e.g. `hmcts-opal-frontend-common-node-X.Y.Z.tgz`) in the repository root.
+
+2. In your consuming project (e.g. `opal-frontend`), ensure you have set an environment variable pointing to this library repository root (not `dist/`):
 
    ```bash
    # In your shell config file (.zshrc, .bash_profile, or .bashrc)
-   export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB DIST FOLDER]"
+   export COMMON_NODE_LIB_PATH="[INSERT PATH TO COMMON NODE LIB REPOSITORY ROOT]"
    ```
 
 3. In the consuming project (e.g. `opal-frontend`), run:
@@ -75,9 +79,10 @@ To use a local version of this library during development in another project:
    yarn import:local:common-node-lib
    ```
 
-   This will remove the published version and install the local build using the path provided.
+   This will remove the currently installed version and install the locally packed `.tgz` artifact. Installing the tarball (rather than linking the repository folder directly) ensures the consuming project uses the same publish shape as npm, avoiding TypeScript and export-map resolution issues.
 
 4. To switch back to the published version:
+
    ```bash
    yarn import:published:common-node-lib
    ```
@@ -98,6 +103,22 @@ After this new version of the library is published, any consuming application sh
     ```bash
     yarn import:published:common-node-lib
     ```
+
+## Release Checklist
+
+Before creating a GitHub release tag:
+
+1. Update `package.json` version to the intended release version.
+2. Add a `CHANGELOG.md` entry under `## [Unreleased]` describing user-visible changes.
+3. Run:
+
+   ```bash
+   yarn build
+   npm pack --dry-run
+   ```
+
+4. Ensure export map changes are intentional and non-breaking (or include release notes/version bump for breaking changes).
+5. Create a GitHub release with a tag matching `package.json` version (`vX.Y.Z` or `X.Y.Z`).
 
 ## Linting and Formatting
 
@@ -157,7 +178,10 @@ Refer to the `exports` block in `package.json` for the full list of available mo
 The following commands are available in the `package.json`:
 
 - `yarn build`  
-  Cleans the `dist/` folder, compiles TypeScript, and copies relevant files to `dist/`.
+  Cleans the `dist/` folder and compiles TypeScript into the publishable `dist/` output.
+
+- `yarn pack:local`  
+  Builds the project (via the `prepack` hook), removes old local tarballs, and creates a fresh `.tgz` package that mirrors the published npm artifact. Useful for testing changes in a consuming application.
 
 - `yarn clean`  
   Removes the `dist/` directory.

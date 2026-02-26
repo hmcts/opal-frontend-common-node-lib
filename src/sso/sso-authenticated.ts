@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Jwt } from '../utils';
+import { Jwt } from '../utils/index.js';
 
 /**
  * Express handler that verifies whether the current session has a valid (non-expired) access token.

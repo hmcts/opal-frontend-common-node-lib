@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
-import { Jwt } from '../../utils';
+import { Jwt } from '../../utils/index.js';
 
 const sessionExpiry = (
   req: Request,

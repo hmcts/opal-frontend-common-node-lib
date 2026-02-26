@@ -39,10 +39,52 @@ jobs:
       - name: Build library
         run: yarn build
 
+      - name: Validate export targets exist
+        run: yarn check:exports
+
+      - name: Validate npm pack publish shape
+        run: yarn check:pack-shape
+
+      - name: Smoke test package exports (ESM)
+        run: yarn check:exports:esm
+
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarqube-scan-action@v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  node18-compat:
+    name: Node 18 Compatibility
+    if: github.event_name != 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js (18)
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18.x'
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.12.0 --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build library
+        run: yarn build
+
+      - name: Validate export targets exist
+        run: yarn check:exports
+
+      - name: Validate npm pack publish shape
+        run: yarn check:pack-shape
+
+      - name: Smoke test package exports (ESM)
+        run: yarn check:exports:esm
 
   release:
     name: Release and Publish
@@ -55,11 +97,24 @@ jobs:
       - name: Checkout repository (Release)
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.target_commitish }}
+          ref: refs/tags/${{ github.event.release.tag_name }}
 
-      - name: Validate and extract release information
-        id: release
-        uses: manovotny/github-releases-for-automated-package-publishing-action@v2.0.1
+      - name: Validate release tag matches package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+          const tag = process.env.RELEASE_TAG || '';
+          const normalizedTag = tag.startsWith('v') ? tag.slice(1) : tag;
+
+          if (normalizedTag !== pkg.version) {
+            console.error(`Release tag (${tag}) does not match package.json version (${pkg.version}).`);
+            process.exit(1);
+          }
+          NODE
 
       - name: Setup Node.js (Release)
         uses: actions/setup-node@v6
@@ -83,8 +138,16 @@ jobs:
       - name: Build library (Release)
         run: yarn build
 
+      - name: Validate export targets exist (Release)
+        run: yarn check:exports
+
+      - name: Validate npm pack publish shape (Release)
+        run: yarn check:pack-shape
+
+      - name: Smoke test package exports (ESM) (Release)
+        run: yarn check:exports:esm
+
       - name: Publish version (OIDC via npm)
-        working-directory: dist
         run: |
           # Ensure we do NOT publish using token-based auth (classic/granular).
           unset NODE_AUTH_TOKEN
