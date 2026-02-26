@@ -225,20 +225,20 @@ __metadata:
   linkType: hard
 
 "@azure/msal-browser@npm:^4.2.0":
-  version: 4.28.1
-  resolution: "@azure/msal-browser@npm:4.28.1"
+  version: 4.29.0
+  resolution: "@azure/msal-browser@npm:4.29.0"
   dependencies:
-    "@azure/msal-common": "npm:15.14.1"
-  checksum: 10c0/cf69fd06ab9f7343302e53233f197cd009e4f1cb304025f8e62dc13df858ebcb14362ab0b326980070cace75d7ce8d37a642debb4ef09ca646a9cd6ee0282e6b
+    "@azure/msal-common": "npm:15.15.0"
+  checksum: 10c0/a25a57bf0928ef5f0d41c04f0961b93cbc70f5cb33e1f332ee7bcfc5224b0c1b836d8fc4bd01a2fcc0856397026c1dda422053b044a8027293aa46f49761b1ea
   languageName: node
   linkType: hard
 
 "@azure/msal-browser@npm:^5.0.0":
-  version: 5.2.0
-  resolution: "@azure/msal-browser@npm:5.2.0"
+  version: 5.3.0
+  resolution: "@azure/msal-browser@npm:5.3.0"
   dependencies:
-    "@azure/msal-common": "npm:16.0.4"
-  checksum: 10c0/04c0ece81ceb27fcf6dc6d72c0a0ca9fe793db35b2adae9545239049dd30b93ca4a67aecafd4b2ab20a03689cfecae75eb826a9fb5123aebe16e3383be8800d0
+    "@azure/msal-common": "npm:16.1.0"
+  checksum: 10c0/0cf4e10dee2b817c0836e958029178701960b60fde93c1223c472338dcd1050b2013c0c8ba00292bcd14bbbbcd2f11fe2751d225155b323b22439fb451c1c691
   languageName: node
   linkType: hard
 
@@ -249,10 +249,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/msal-common@npm:16.0.4":
-  version: 16.0.4
-  resolution: "@azure/msal-common@npm:16.0.4"
-  checksum: 10c0/d9a604b8c453658c7b0de65c86ac333e1a7762a62c4bf16e96cf63219b60d3000d2ddd3a010c3ec2389d5bc27a19c8f6c26a160dee38826695cc6e8941770f76
+"@azure/msal-common@npm:15.15.0":
+  version: 15.15.0
+  resolution: "@azure/msal-common@npm:15.15.0"
+  checksum: 10c0/1b2cae4950dff473c957afc725ceba4f0e00486eb110671f25af0ec40a5c905ebe56ea688e9651cb8ff28e9d1025f817faed7245c5103070be439daa33a01b86
+  languageName: node
+  linkType: hard
+
+"@azure/msal-common@npm:16.1.0":
+  version: 16.1.0
+  resolution: "@azure/msal-common@npm:16.1.0"
+  checksum: 10c0/22c234a4817f49da2f1fd835fd47d3ea28d01da4f898d934b3a4119c7f3431c1dcbe01f7401a05e37587636e916452f1848ff93c54f776398433ed6bfb844b83
   languageName: node
   linkType: hard
 
@@ -802,20 +809,20 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 25.0.2
-  resolution: "@types/node@npm:25.0.2"
+  version: 25.3.1
+  resolution: "@types/node@npm:25.3.1"
   dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10c0/12c4044bf2e46ba3d313ddf6256ee3c88e336a62d129fe788eeab8ff2631b3df51eb31ade4cdc04552fbe51e285f0663c49b60c78acd31da2b9f2c86a84347e3
+    undici-types: "npm:~7.18.0"
+  checksum: 10c0/f4714e3f2c393434cdefbf207f3fe470bcf4d6c5717298c3fc9239e362a57cd25e59603c60e9c956e7d5d0dfb97cf2e037b37cf6dc2f3876f6a963146f7adc6d
   languageName: node
   linkType: hard
 
 "@types/node@npm:^24.0.0":
-  version: 24.10.13
-  resolution: "@types/node@npm:24.10.13"
+  version: 24.10.14
+  resolution: "@types/node@npm:24.10.14"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/4ff0b9b060b5477c0fec5b11a176f294be588104ab546295db65b17a92ba0a6077b52ad92dd3c0d2154198c7f9d0021e6c1d42b00c9ac7ebfd85632afbcc48a4
+  checksum: 10c0/d26224c654bb028ec9f917152a4e9e562e589b321c1433d5445bc0f742575822ecb9c7aa6a4d90a73a85971369e4daee05e4101d31741ba1745f27139c0d3fe8
   languageName: node
   linkType: hard
 
@@ -1327,11 +1334,11 @@ __metadata:
   linkType: hard
 
 "config@npm:^4.0.0":
-  version: 4.4.0
-  resolution: "config@npm:4.4.0"
+  version: 4.4.1
+  resolution: "config@npm:4.4.1"
   dependencies:
     json5: "npm:^2.2.3"
-  checksum: 10c0/7ac26e88b279a4be4a0e1ae0f9e1834757c1691d6bcf86173ced7695e3c63af6c0311f5542ad049e0f3f58e7d9a97d5768c866a8f207779e66d214affb257f48
+  checksum: 10c0/f92c7b61d2456f933a53da1fea06abe116584df99dd1254a93e7b10c9487ddf17a1f865bd7ab8e4cf0cca23777dd89b6b1ba81e1c71e06111d36fbb00b49c28f
   languageName: node
   linkType: hard
 
@@ -3339,6 +3346,13 @@ __metadata:
   version: 7.16.0
   resolution: "undici-types@npm:7.16.0"
   checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~7.18.0":
+  version: 7.18.2
+  resolution: "undici-types@npm:7.18.2"
+  checksum: 10c0/85a79189113a238959d7a647368e4f7c5559c3a404ebdb8fc4488145ce9426fcd82252a844a302798dfc0e37e6fb178ff481ed03bc4caf634c5757d9ef43521d
   languageName: node
   linkType: hard
 
