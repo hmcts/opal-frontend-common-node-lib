@@ -1,4 +1,4 @@
-import { SecurityToken } from './interfaces/index';
+import { SecurityToken } from './interfaces/index.js';
 
 declare module 'express-session' {
   interface SessionData {

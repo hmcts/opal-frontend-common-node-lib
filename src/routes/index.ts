@@ -1,17 +1,17 @@
 import { Application } from 'express';
 import bodyParser from 'body-parser';
 import type { NextFunction, Request, Response } from 'express';
-import { ssoAuthenticated, ssoLogin, ssoLoginCallback } from '../sso';
-import createMsalInstance from '../sso/sso-configuration';
-import ssoLogout from '../sso/sso-logout';
-import { ssoAuthenticatedStub, ssoLogoutCallbackStub, ssoLoginStub, ssoLoginCallbackStub } from '../stubs/sso';
-import sessionExpiry from '@hmcts/opal-frontend-common-node/session/session-expiry';
-import ExpiryConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-expiry-config';
-import RoutesConfiguration from '@hmcts/opal-frontend-common-node/interfaces/routes-config';
-import SsoConfiguration from '@hmcts/opal-frontend-common-node/interfaces/sso-config';
-import SessionConfiguration from '@hmcts/opal-frontend-common-node/interfaces/session-config';
-import ssoLogoutCallback from '../sso/sso-logout-callback';
-import OpalUserServiceConfig from '../interfaces/opal-user-service-config';
+import { ssoAuthenticated, ssoLogin, ssoLoginCallback } from '../sso/index.js';
+import createMsalInstance from '../sso/sso-configuration.js';
+import ssoLogout from '../sso/sso-logout.js';
+import { ssoAuthenticatedStub, ssoLogoutCallbackStub, ssoLoginStub, ssoLoginCallbackStub } from '../stubs/sso/index.js';
+import sessionExpiry from '../session/session-expiry/index.js';
+import ExpiryConfiguration from '../interfaces/session-expiry-config.js';
+import RoutesConfiguration from '../interfaces/routes-config.js';
+import SsoConfiguration from '../interfaces/sso-config.js';
+import SessionConfiguration from '../interfaces/session-config.js';
+import ssoLogoutCallback from '../sso/sso-logout-callback.js';
+import OpalUserServiceConfig from '../interfaces/opal-user-service-config.js';
 
 export class Routes {
   private setupSSORoutes(

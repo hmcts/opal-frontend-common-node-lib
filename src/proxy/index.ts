@@ -1,1 +1,1 @@
-export * from './opal-api-proxy';
+export * from './opal-api-proxy/index.js';
