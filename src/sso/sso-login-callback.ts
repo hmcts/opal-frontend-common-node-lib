@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { ConfidentialClientApplication } from '@azure/msal-node';
 import 'express-session';
-import { RoutesConfiguration, SecurityToken } from '../interfaces';
+import { RoutesConfiguration, SecurityToken } from '../interfaces/index.js';
 import { Logger } from '@hmcts/nodejs-logging';
-import { handleCheckUser } from '../services/opal-user-service';
-import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config';
+import { handleCheckUser } from '../services/opal-user-service.js';
+import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
 
 const logger = Logger.getLogger('sso-login-callback');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
