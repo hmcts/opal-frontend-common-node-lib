@@ -68,3 +68,6 @@ multi-reporter-config.json
 yarn-known-issues-current
 current-ids.json
 known-ids.json
+
+# npm pack artifacts
+*.tgz
