@@ -2,6 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "noImplicitOverride": true,
     "target": "ES2022",
@@ -17,7 +18,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "@hmcts/opal-frontend-common-node": [
