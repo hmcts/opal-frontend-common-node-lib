@@ -1,5 +1,5 @@
-export { default as ssoLogin } from './sso-login';
-export { default as ssoLogout } from './sso-logout';
-export { default as ssoLoginCallback } from './sso-login-callback';
-export { default as ssoAuthenticated } from './sso-authenticated';
-export { default as ssoConfig } from './sso-configuration';
+export { default as ssoLogin } from './sso-login.js';
+export { default as ssoLogout } from './sso-logout.js';
+export { default as ssoLoginCallback } from './sso-login-callback.js';
+export { default as ssoAuthenticated } from './sso-authenticated.js';
+export { default as ssoConfig } from './sso-configuration.js';

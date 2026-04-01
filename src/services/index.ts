@@ -1,1 +1,1 @@
-export { handleCheckUser } from './opal-user-service';
+export { handleCheckUser } from './opal-user-service.js';

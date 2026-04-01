@@ -1,4 +1,4 @@
-import LaunchDarklyConfig from '../interfaces/launch-darkly-config';
+import LaunchDarklyConfig from '../interfaces/launch-darkly-config.js';
 
 export class LaunchDarkly {
   public enableFor(enabled: boolean, stream: boolean, clientId: string | null): LaunchDarklyConfig {

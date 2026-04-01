@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Logger } from '@hmcts/nodejs-logging';
-import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config';
+import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
 
 const logger = Logger.getLogger('opal-user-service');
 
@@ -20,6 +20,7 @@ async function checkUserExists(
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        'X-New-Login': 'true',
       },
     });
 
