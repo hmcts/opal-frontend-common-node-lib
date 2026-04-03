@@ -234,11 +234,11 @@ __metadata:
   linkType: hard
 
 "@azure/msal-browser@npm:^5.0.0":
-  version: 5.6.2
-  resolution: "@azure/msal-browser@npm:5.6.2"
+  version: 5.6.3
+  resolution: "@azure/msal-browser@npm:5.6.3"
   dependencies:
-    "@azure/msal-common": "npm:16.4.0"
-  checksum: 10c0/21620aa658c0f0295fe164a1095107806a735d801290c4e2dd3459832f25038da2d135cd8ec506ba50941918df240051888c4cbd0c182f121398ebdd72c19b49
+    "@azure/msal-common": "npm:16.4.1"
+  checksum: 10c0/fd5c4cebe83c2418af99f4e3119c137543ed9f9de81acaed6c90ada48e92296630fcbf0e5b561293cf362db9e252b8290be30a2dcd7e09c73492f2340e7e7c20
   languageName: node
   linkType: hard
 
@@ -256,10 +256,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/msal-common@npm:16.4.0":
-  version: 16.4.0
-  resolution: "@azure/msal-common@npm:16.4.0"
-  checksum: 10c0/754ecee054769551db9f9407de981998944f6e7caa4de31c4aaafc6f7412e23b3f4e494abfe737e77f0a995e339e19142d2fd53d7427c340132e1e6d229077e1
+"@azure/msal-common@npm:16.4.1":
+  version: 16.4.1
+  resolution: "@azure/msal-common@npm:16.4.1"
+  checksum: 10c0/c12d948825b4486f4ef5ef563920df4d8a2e3b8549ebaaee5d1d8425aaff1d64a1958ac835fbdc286689ba88edad1373360511375d2b4086d7916e637debd3f3
   languageName: node
   linkType: hard
 
