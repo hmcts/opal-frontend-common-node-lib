@@ -1,13 +1,14 @@
 class RoutesConfiguration {
-  opalApiTarget!: string;
-  opalFinesServiceTarget!: string;
-  opalUserServiceTarget!: string;
-  frontendHostname!: string;
-  prefix!: string;
-  clientId!: string;
-  clientSecret!: string;
-  tenantId!: string;
-  microsoftUrl!: string;
+  frontendHostname = '';
+  prefix = '';
+  clientId = '';
+  clientSecret = '';
+  tenantId = '';
+  microsoftUrl = '';
+
+  constructor(initialValues?: Partial<RoutesConfiguration>) {
+    Object.assign(this, initialValues);
+  }
 }
 
 export default RoutesConfiguration;

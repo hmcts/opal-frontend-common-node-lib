@@ -4,6 +4,7 @@ export { default as appInsightsConfig } from './app-insights-config.js';
 export { default as TransferServerState } from './transfer-server-state.js';
 export { default as ExpiryConfiguration } from './session-expiry-config.js';
 export { default as SessionStorageConfiguration } from './session-storage-config.js';
+export { default as ProxyConfiguration } from './proxy-config.js';
 export { default as RoutesConfiguration } from './routes-config.js';
 export { default as SsoConfiguration } from './sso-config.js';
 export { default as SessionConfiguration } from './session-config.js';

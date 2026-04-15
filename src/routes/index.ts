@@ -8,17 +8,38 @@ import { ssoAuthenticatedStub, ssoLogoutCallbackStub, ssoLoginStub, ssoLoginCall
 import sessionExpiry from '../session/session-expiry/index.js';
 import ExpiryConfiguration from '../interfaces/session-expiry-config.js';
 import RoutesConfiguration from '../interfaces/routes-config.js';
+import ProxyConfiguration from '../interfaces/proxy-config.js';
 import SsoConfiguration from '../interfaces/sso-config.js';
 import SessionConfiguration from '../interfaces/session-config.js';
 import ssoLogoutCallback from '../sso/sso-logout-callback.js';
 import OpalUserServiceConfig from '../interfaces/opal-user-service-config.js';
 
+export interface EnableRoutesOptions {
+  app: Application;
+  ssoEnabled: boolean;
+  expiryConfiguration: ExpiryConfiguration;
+  routesConfiguration: RoutesConfiguration;
+  sessionConfiguration: SessionConfiguration;
+  ssoConfiguration: SsoConfiguration;
+  opalUserServiceConfig: OpalUserServiceConfig;
+  proxyConfiguration: ProxyConfiguration;
+}
+
 export class Routes {
+  private requireConfiguredUrl(url: string | null | undefined, key: keyof ProxyConfiguration): string {
+    if (!url) {
+      throw new Error(`Missing ${key} for route setup`);
+    }
+
+    return url;
+  }
+
   private setupSSORoutes(
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
     opalUserServiceConfig: OpalUserServiceConfig,
+    opalUserServiceUrl: string,
   ): void {
     if (!routesConfiguration.clientId || !routesConfiguration.clientSecret || !routesConfiguration.tenantId) {
       throw new Error('Missing essential SSO configuration fields: clientId, clientSecret, or tenantId');
@@ -39,14 +60,16 @@ export class Routes {
 
     // LOGIN CALLBACK
     app.post(ssoConfiguration.loginCallback, (req: Request, res: Response) =>
-      ssoLoginCallback(
+      ssoLoginCallback({
         req,
         res,
-        confidentialClient,
-        ssoConfiguration.loginCallback,
-        routesConfiguration,
+        msalInstance: confidentialClient,
+        ssoLoginCallback: ssoConfiguration.loginCallback,
+        frontendHostname: routesConfiguration.frontendHostname,
+        clientId: routesConfiguration.clientId,
         opalUserServiceConfig,
-      ),
+        opalUserServiceUrl,
+      }),
     );
 
     // LOGOUT
@@ -71,13 +94,14 @@ export class Routes {
     app: Application,
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
+    opalUserServiceUrl: string,
   ): void {
     // LOGIN
     app.get(ssoConfiguration.login, (req: Request, res: Response, next: NextFunction) => ssoLoginStub(req, res, next));
 
     // LOGIN CALLBACK
     app.get(ssoConfiguration.loginCallback, (req: Request, res: Response, next: NextFunction) =>
-      ssoLoginCallbackStub(req, res, next, routesConfiguration.opalUserServiceTarget),
+      ssoLoginCallbackStub(req, res, next, opalUserServiceUrl),
     );
 
     // LOGOUT
@@ -94,23 +118,26 @@ export class Routes {
     app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => ssoAuthenticatedStub(req, res));
   }
 
-  public enableFor(
-    app: Application,
-    ssoEnabled: boolean,
-    expiryConfiguration: ExpiryConfiguration,
-    routesConfiguration: RoutesConfiguration,
-    sessionConfiguration: SessionConfiguration,
-    ssoConfiguration: SsoConfiguration,
-    opalUserServiceConfig: OpalUserServiceConfig,
-  ): void {
+  public enableFor({
+    app,
+    ssoEnabled,
+    expiryConfiguration,
+    routesConfiguration,
+    sessionConfiguration,
+    ssoConfiguration,
+    opalUserServiceConfig,
+    proxyConfiguration,
+  }: EnableRoutesOptions): void {
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
+    const opalUserServiceUrl = this.requireConfiguredUrl(proxyConfiguration.opalUserServiceUrl, 'opalUserServiceUrl');
+
     if (ssoEnabled) {
-      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceConfig);
+      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceConfig, opalUserServiceUrl);
     } else {
-      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration);
+      this.setupStubRoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceUrl);
     }
 
     app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
