@@ -31,6 +31,9 @@
       "@hmcts/opal-frontend-common-node/app-insights/*": [
         "./src/app-insights/*",
       ],
+      "@hmcts/opal-frontend-common-node/constants": [
+        "./src/constants/index.ts",
+      ],
       "@hmcts/opal-frontend-common-node/interfaces/*": [
         "./src/interfaces/*",
       ],

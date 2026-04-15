@@ -163,8 +163,10 @@ import { CSRFToken } from '@hmcts/opal-frontend-common-node/csrf-token';
 import { AppInsights } from '@hmcts/opal-frontend-common-node/app-insights';
 import { Helmet } from '@hmcts/opal-frontend-common-node/helmet';
 import { LaunchDarkly } from '@hmcts/opal-frontend-common-node/launch-darkly';
+import { DEFAULT_PROXY_CONFIG } from '@hmcts/opal-frontend-common-node/constants';
 import {
   ExpiryConfiguration,
+  ProxyConfiguration,
   RoutesConfiguration,
   SessionStorageConfiguration,
   TransferServerState,
