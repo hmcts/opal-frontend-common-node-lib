@@ -14,6 +14,17 @@ import SessionConfiguration from '../interfaces/session-config.js';
 import ssoLogoutCallback from '../sso/sso-logout-callback.js';
 import OpalUserServiceConfig from '../interfaces/opal-user-service-config.js';
 
+export interface EnableRoutesOptions {
+  app: Application;
+  ssoEnabled: boolean;
+  expiryConfiguration: ExpiryConfiguration;
+  routesConfiguration: RoutesConfiguration;
+  sessionConfiguration: SessionConfiguration;
+  ssoConfiguration: SsoConfiguration;
+  opalUserServiceConfig: OpalUserServiceConfig;
+  proxyConfiguration: ProxyConfiguration;
+}
+
 export class Routes {
   private requireConfiguredUrl(url: string | null | undefined, key: keyof ProxyConfiguration): string {
     if (!url) {
@@ -49,16 +60,16 @@ export class Routes {
 
     // LOGIN CALLBACK
     app.post(ssoConfiguration.loginCallback, (req: Request, res: Response) =>
-      ssoLoginCallback(
+      ssoLoginCallback({
         req,
         res,
-        confidentialClient,
-        ssoConfiguration.loginCallback,
-        routesConfiguration.frontendHostname,
-        routesConfiguration.clientId,
+        msalInstance: confidentialClient,
+        ssoLoginCallback: ssoConfiguration.loginCallback,
+        frontendHostname: routesConfiguration.frontendHostname,
+        clientId: routesConfiguration.clientId,
         opalUserServiceConfig,
         opalUserServiceUrl,
-      ),
+      }),
     );
 
     // LOGOUT
@@ -107,16 +118,16 @@ export class Routes {
     app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => ssoAuthenticatedStub(req, res));
   }
 
-  public enableFor(
-    app: Application,
-    ssoEnabled: boolean,
-    expiryConfiguration: ExpiryConfiguration,
-    routesConfiguration: RoutesConfiguration,
-    sessionConfiguration: SessionConfiguration,
-    ssoConfiguration: SsoConfiguration,
-    opalUserServiceConfig: OpalUserServiceConfig,
-    proxyConfiguration: ProxyConfiguration,
-  ): void {
+  public enableFor({
+    app,
+    ssoEnabled,
+    expiryConfiguration,
+    routesConfiguration,
+    sessionConfiguration,
+    ssoConfiguration,
+    opalUserServiceConfig,
+    proxyConfiguration,
+  }: EnableRoutesOptions): void {
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
