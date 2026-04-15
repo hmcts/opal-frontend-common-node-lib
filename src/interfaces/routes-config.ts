@@ -1,5 +1,7 @@
 class RoutesConfiguration {
   opalApiTarget!: string;
+  opalFinesServiceTarget!: string;
+  opalRmServiceTarget!: string;
   opalUserServiceTarget!: string;
   frontendHostname!: string;
   prefix!: string;
