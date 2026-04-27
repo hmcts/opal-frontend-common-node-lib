@@ -137,7 +137,7 @@
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.30.1"
   },
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@4.14.1",
   "exports": {
     ".": {
       "import": "./dist/index.js",
