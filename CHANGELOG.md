@@ -8,6 +8,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ### Changed
 - _Add entries here for each PR that changes public behavior, exports, or consumer configuration._
+- Add a reusable `user-state` route helper for serving user state from Redis with user-service fallback.
 
 ## Changelog Policy
 

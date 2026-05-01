@@ -1,7 +1,7 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
   "engines": {
@@ -77,6 +77,9 @@
       ],
       "proxy/opal-api-proxy": [
         "dist/proxy/opal-api-proxy/index.d.ts"
+      ],
+      "user-state": [
+        "dist/user-state/index.d.ts"
       ]
     }
   },
@@ -222,6 +225,10 @@
     "./proxy/opal-api-proxy": {
       "import": "./dist/proxy/opal-api-proxy/index.js",
       "types": "./dist/proxy/opal-api-proxy/index.d.ts"
+    },
+    "./user-state": {
+      "import": "./dist/user-state/index.js",
+      "types": "./dist/user-state/index.d.ts"
     },
     "./types": {
       "types": "./dist/global.d.ts"
