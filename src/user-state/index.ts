@@ -1,18 +1,11 @@
 import axios from 'axios';
 import type { Application, Request, Response } from 'express';
+import type UserStateConfiguration from '../interfaces/user-state-config.js';
+import { getCachedJsonObject } from '../redis/index.js';
 import { Jwt } from '../utils/index.js';
-
-const DEFAULT_CACHE_KEY_PREFIX = 'USER_STATE_';
-const DEFAULT_ROUTE_PATH = '/api/user-state';
-const DEFAULT_TOKEN_CLAIM = 'sub';
-const DEFAULT_REDIS_CLIENT_KEY = 'redisClient';
 
 interface JwtPayload {
   [claim: string]: unknown;
-}
-
-interface RedisClient {
-  get(key: string): Promise<string | null>;
 }
 
 interface UserServiceResponse {
@@ -29,11 +22,8 @@ type UserStateRequest = Request & {
 };
 
 export interface UserStateRouteOptions {
-  cacheKeyPrefix?: string;
-  redisClientKey?: string;
-  routePath?: string;
-  tokenClaim?: string;
   userServiceBaseUrl: string;
+  userStateConfiguration: UserStateConfiguration;
   userStateUrl: string;
 }
 
@@ -51,7 +41,7 @@ function decodeJwtPayload(accessToken: string): JwtPayload | null {
   }
 
   try {
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = payload.replaceAll('-', '+').replaceAll('_', '/');
     const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
     const decodedPayload: unknown = JSON.parse(Buffer.from(paddedBase64, 'base64').toString('utf8'));
 
@@ -59,20 +49,6 @@ function decodeJwtPayload(accessToken: string): JwtPayload | null {
   } catch {
     return null;
   }
-}
-
-/**
- * Reads the configured Redis client from Express app locals.
- *
- * @param app - Express application that may hold shared clients on `locals`.
- * @param redisClientKey - Key used to look up the Redis client from `app.locals`.
- * @returns A Redis-like client with a `get` method, or `null` when no compatible client is configured.
- */
-function getRedisClient(app: Application, redisClientKey: string): RedisClient | null {
-  const redisClient: unknown = app.locals[redisClientKey];
-  const candidate = redisClient as { get?: unknown };
-
-  return typeof candidate?.get === 'function' ? (candidate as RedisClient) : null;
 }
 
 /**
@@ -91,49 +67,6 @@ function getCacheKey(accessToken: string, tokenClaim: string, cacheKeyPrefix: st
   }
 
   return `${cacheKeyPrefix}${userIdentifier}`;
-}
-
-/**
- * Parses and validates a cached user-state payload from Redis.
- *
- * @param cachedUserState - JSON string returned from Redis.
- * @returns The parsed object payload, or `null` when the value is invalid JSON, an array, or not an object.
- */
-function parseCachedUserState(cachedUserState: string): unknown | null {
-  try {
-    const userState: unknown = JSON.parse(cachedUserState);
-
-    return userState && typeof userState === 'object' && !Array.isArray(userState) ? userState : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Attempts to load user state from Redis.
- *
- * Missing Redis configuration, Redis read failures, and invalid cached payloads are treated as cache misses so the
- * route can fall back to the user service.
- *
- * @param app - Express application that may hold the Redis client on `locals`.
- * @param cacheKey - Redis key for the user-state payload.
- * @param redisClientKey - Key used to look up the Redis client from `app.locals`.
- * @returns The cached user-state object, or `null` when no usable cached value is available.
- */
-async function getCachedUserState(app: Application, cacheKey: string, redisClientKey: string): Promise<unknown | null> {
-  const redisClient = getRedisClient(app, redisClientKey);
-
-  if (!redisClient) {
-    return null;
-  }
-
-  try {
-    const cachedUserState = await redisClient.get(cacheKey);
-
-    return cachedUserState ? parseCachedUserState(cachedUserState) : null;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -181,13 +114,10 @@ async function getUserStateFromUserService(
  * response.
  *
  * @param app - Express application to register the route against.
- * @param options - User-state route configuration, including user-service location and optional cache settings.
+ * @param options - User-state route configuration, including user-service location and route/cache settings.
  */
 export function configureUserStateRoute(app: Application, options: UserStateRouteOptions): void {
-  const cacheKeyPrefix = options.cacheKeyPrefix ?? DEFAULT_CACHE_KEY_PREFIX;
-  const redisClientKey = options.redisClientKey ?? DEFAULT_REDIS_CLIENT_KEY;
-  const routePath = options.routePath ?? DEFAULT_ROUTE_PATH;
-  const tokenClaim = options.tokenClaim ?? DEFAULT_TOKEN_CLAIM;
+  const { cacheKeyPrefix, redisClientKey, routePath, tokenClaim } = options.userStateConfiguration;
 
   app.get(routePath, async (req: Request, res: Response) => {
     res.header('Cache-Control', 'no-store, must-revalidate');
@@ -206,7 +136,7 @@ export function configureUserStateRoute(app: Application, options: UserStateRout
       return;
     }
 
-    const cachedUserState = await getCachedUserState(app, cacheKey, redisClientKey);
+    const cachedUserState = await getCachedJsonObject(app, cacheKey, redisClientKey);
 
     if (cachedUserState) {
       res.status(200).json(cachedUserState);

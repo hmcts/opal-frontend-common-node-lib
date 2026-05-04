@@ -9,3 +9,4 @@ export { default as RoutesConfiguration } from './routes-config.js';
 export { default as SsoConfiguration } from './sso-config.js';
 export { default as SessionConfiguration } from './session-config.js';
 export { default as OpalUserServiceConfiguration } from './opal-user-service-config.js';
+export { default as UserStateConfiguration } from './user-state-config.js';

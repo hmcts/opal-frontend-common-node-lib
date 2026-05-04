@@ -57,6 +57,9 @@
       "interfaces/sso-config": [
         "dist/interfaces/sso-config.d.ts"
       ],
+      "interfaces/user-state-config": [
+        "dist/interfaces/user-state-config.d.ts"
+      ],
       "interfaces/session-config": [
         "dist/interfaces/session-config.d.ts"
       ],
@@ -77,6 +80,9 @@
       ],
       "proxy/opal-api-proxy": [
         "dist/proxy/opal-api-proxy/index.d.ts"
+      ],
+      "redis": [
+        "dist/redis/index.d.ts"
       ],
       "user-state": [
         "dist/user-state/index.d.ts"
@@ -198,6 +204,10 @@
       "import": "./dist/interfaces/sso-config.js",
       "types": "./dist/interfaces/sso-config.d.ts"
     },
+    "./interfaces/user-state-config": {
+      "import": "./dist/interfaces/user-state-config.js",
+      "types": "./dist/interfaces/user-state-config.d.ts"
+    },
     "./interfaces/session-config": {
       "import": "./dist/interfaces/session-config.js",
       "types": "./dist/interfaces/session-config.d.ts"
@@ -225,6 +235,10 @@
     "./proxy/opal-api-proxy": {
       "import": "./dist/proxy/opal-api-proxy/index.js",
       "types": "./dist/proxy/opal-api-proxy/index.d.ts"
+    },
+    "./redis": {
+      "import": "./dist/redis/index.js",
+      "types": "./dist/redis/index.d.ts"
     },
     "./user-state": {
       "import": "./dist/user-state/index.js",

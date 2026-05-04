@@ -55,6 +55,12 @@
       "@hmcts/opal-frontend-common-node/proxy/opal-api-proxy/*": [
         "./src/proxy/opal-api-proxy/*",
       ],
+      "@hmcts/opal-frontend-common-node/redis": [
+        "./src/redis/index.ts",
+      ],
+      "@hmcts/opal-frontend-common-node/redis/*": [
+        "./src/redis/*",
+      ],
       "@hmcts/opal-frontend-common-node/routes/*": [
         "./src/routes/*",
       ],
