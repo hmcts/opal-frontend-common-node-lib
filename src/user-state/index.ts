@@ -28,12 +28,16 @@ function sendDownstreamResponse(res: Response, status: number, data: unknown): v
   res.status(status).send(data);
 }
 
+function isSuccessfulResponse(status: number): boolean {
+  return status >= 200 && status < 300;
+}
+
 /**
  * Handles a user-state route request.
  *
  * Reads the logged-in user's Microsoft access token from the server-side session, derives the Redis key from the
  * configured AAD claim, returns cached user state when present, and calls opal-user-service on cache miss so the
- * backend can populate Redis with its configured TTL.
+ * backend can populate Redis with its configured TTL before reading Redis again.
  */
 export async function getUserState({
   app,
@@ -78,6 +82,22 @@ export async function getUserState({
     accessToken,
     opalUserServiceConfig.userStateUrl,
   );
+
+  if (isSuccessfulResponse(userStateResponse.status)) {
+    const repopulatedUserState = await redisService.getCachedJsonObject(
+      app,
+      cacheKey,
+      userStateConfiguration.redisClientKey,
+    );
+
+    if (repopulatedUserState) {
+      res.status(200).json(repopulatedUserState);
+      return;
+    }
+
+    res.status(502).send({ message: 'Unable to retrieve user state from cache' });
+    return;
+  }
 
   sendDownstreamResponse(res, userStateResponse.status, userStateResponse.data);
 }
