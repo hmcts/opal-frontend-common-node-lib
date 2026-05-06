@@ -8,8 +8,9 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ### Changed
 - _Add entries here for each PR that changes public behavior, exports, or consumer configuration._
-- Add a reusable `redis` helper module for reading JSON object cache entries from the configured Redis client.
-- Add a reusable `user-state` route helper for serving user state from Redis with application-supplied route/cache configuration and user-service fallback.
+- Add a configurable `user-state` route module for returning cached user state from the logged-in session.
+- BREAKING: `Routes.enableFor` consumers must provide `userStateConfiguration` when enabling common routes.
+- Add a reusable `redis` service for reading JSON object cache entries from the configured Redis client.
 
 ## Changelog Policy
 

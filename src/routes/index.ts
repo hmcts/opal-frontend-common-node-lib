@@ -13,6 +13,8 @@ import SsoConfiguration from '../interfaces/sso-config.js';
 import SessionConfiguration from '../interfaces/session-config.js';
 import ssoLogoutCallback from '../sso/sso-logout-callback.js';
 import OpalUserServiceConfig from '../interfaces/opal-user-service-config.js';
+import UserStateConfiguration from '../interfaces/user-state-config.js';
+import { getUserState } from '../user-state/index.js';
 
 export interface EnableRoutesOptions {
   app: Application;
@@ -22,6 +24,7 @@ export interface EnableRoutesOptions {
   sessionConfiguration: SessionConfiguration;
   ssoConfiguration: SsoConfiguration;
   opalUserServiceConfig: OpalUserServiceConfig;
+  userStateConfiguration: UserStateConfiguration;
   proxyConfiguration: ProxyConfiguration;
 }
 
@@ -118,6 +121,24 @@ export class Routes {
     app.get(ssoConfiguration.authenticated, (req: Request, res: Response) => ssoAuthenticatedStub(req, res));
   }
 
+  private setupUserStateRoute(
+    app: Application,
+    userStateConfiguration: UserStateConfiguration,
+    opalUserServiceConfig: OpalUserServiceConfig,
+    opalUserServiceUrl: string,
+  ): void {
+    app.get(userStateConfiguration.routePath, (req: Request, res: Response) =>
+      getUserState({
+        app,
+        opalUserServiceConfig,
+        opalUserServiceUrl,
+        req,
+        res,
+        userStateConfiguration,
+      }),
+    );
+  }
+
   public enableFor({
     app,
     ssoEnabled,
@@ -126,6 +147,7 @@ export class Routes {
     sessionConfiguration,
     ssoConfiguration,
     opalUserServiceConfig,
+    userStateConfiguration,
     proxyConfiguration,
   }: EnableRoutesOptions): void {
     // Declare use of body-parser AFTER the use of proxy https://github.com/villadora/express-http-proxy
@@ -139,6 +161,8 @@ export class Routes {
     } else {
       this.setupStubRoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceUrl);
     }
+
+    this.setupUserStateRoute(app, userStateConfiguration, opalUserServiceConfig, opalUserServiceUrl);
 
     app.get(sessionConfiguration.sessionExpiryUrl, (req: Request, res: Response) =>
       sessionExpiry(

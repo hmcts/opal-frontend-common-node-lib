@@ -4,6 +4,11 @@ import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config
 
 const logger = Logger.getLogger('opal-user-service');
 
+export interface UserStateLookupResult {
+  data: unknown;
+  status: number;
+}
+
 /**
  * Checks if a user exists in the opal-user-service
  * @param opalUserServiceTarget - The base URL of the opal-user-service
@@ -77,6 +82,42 @@ async function addUser(opalUserServiceTarget: string, accessToken: string, addUs
   } catch (error) {
     logger.error('Error adding user', error);
     return false;
+  }
+}
+
+export async function getUserStateFromUserService(
+  opalUserServiceTarget: string,
+  accessToken: string,
+  userStateUrl: string,
+): Promise<UserStateLookupResult> {
+  try {
+    const response = await axios.get<unknown>(`${opalUserServiceTarget}${userStateUrl}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+        'X-New-Login': 'false',
+      },
+      validateStatus: () => true,
+    });
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      logger.error('Axios error without response when retrieving user state', {
+        message: error.message,
+        code: error.code,
+      });
+    } else {
+      logger.error('Unexpected error when retrieving user state', error);
+    }
+
+    return {
+      data: { message: 'Unable to retrieve user state' },
+      status: 502,
+    };
   }
 }
 
