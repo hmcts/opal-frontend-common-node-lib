@@ -1,6 +1,5 @@
 class UserStateConfiguration {
   cacheKeyPrefix!: string;
-  redisClientKey!: string;
   routePath!: string;
   tokenClaim!: string;
 }

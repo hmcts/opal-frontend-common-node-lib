@@ -1,5 +1,6 @@
 import type { Application } from 'express';
 import type UserStateConfiguration from '../interfaces/user-state-config.js';
+import { REDIS_CLIENT_APP_LOCAL_KEY } from '../constants/redis-client-app-local-key.js';
 import { decodeObject } from '../utils/base64.js';
 
 export interface RedisClient {
@@ -11,6 +12,29 @@ interface JwtPayload {
 }
 
 export type CachedJsonObject = Record<string, unknown>;
+
+export class RedisClientUnavailableError extends Error {
+  public constructor() {
+    super(`Redis client is not available at app.locals.${REDIS_CLIENT_APP_LOCAL_KEY}`);
+    this.name = 'RedisClientUnavailableError';
+  }
+}
+
+export class RedisCacheReadError extends Error {
+  public constructor(options?: { cause?: unknown }) {
+    super('Unable to read from Redis cache', options);
+    this.name = 'RedisCacheReadError';
+  }
+}
+
+export class RedisCacheParseError extends Error {
+  public constructor() {
+    super('Redis cache payload is not a JSON object');
+    this.name = 'RedisCacheParseError';
+  }
+}
+
+export type RedisCacheError = RedisClientUnavailableError | RedisCacheReadError | RedisCacheParseError;
 
 export default class RedisService {
   /**
@@ -36,14 +60,13 @@ export default class RedisService {
   }
 
   /**
-   * Reads the configured Redis client from Express app locals.
+   * Reads the shared Redis client created by session storage from Express app locals.
    *
    * @param app - Express application that may hold shared clients on `locals`.
-   * @param redisClientKey - Key used to look up the Redis client from `app.locals`.
    * @returns A Redis-like client with a `get` method, or `null` when no compatible client is configured.
    */
-  public getRedisClient(app: Application, redisClientKey: string): RedisClient | null {
-    const redisClient: unknown = app.locals[redisClientKey];
+  public getRedisClient(app: Application): RedisClient | null {
+    const redisClient: unknown = app.locals[REDIS_CLIENT_APP_LOCAL_KEY];
     const candidate = redisClient as { get?: unknown };
 
     return typeof candidate?.get === 'function' ? (candidate as RedisClient) : null;
@@ -88,55 +111,66 @@ export default class RedisService {
   /**
    * Attempts to load and parse a JSON object from Redis.
    *
-   * Missing Redis configuration, Redis read failures, and invalid cached payloads are treated as cache misses.
+   * A missing Redis key is treated as a cache miss. Missing Redis configuration, Redis read failures, and invalid cached
+   * payloads are treated as cache errors because Redis is the source of truth for user state.
    *
    * @param app - Express application that may hold the Redis client on `locals`.
    * @param cacheKey - Redis key for the cached payload.
-   * @param redisClientKey - Key used to look up the Redis client from `app.locals`.
    * @returns The cached object, or `null` when no usable cached value is available.
+   * @throws RedisCacheError when Redis cannot be read as the source of truth.
    */
-  public async getCachedJsonObject(
-    app: Application,
-    cacheKey: string,
-    redisClientKey: string,
-  ): Promise<CachedJsonObject | null> {
-    const redisClient = this.getRedisClient(app, redisClientKey);
+  public async getCachedJsonObject(app: Application, cacheKey: string): Promise<CachedJsonObject | null> {
+    const redisClient = this.getRedisClient(app);
 
     if (!redisClient) {
-      return null;
+      throw new RedisClientUnavailableError();
     }
+
+    let cachedValue: string | null;
 
     try {
-      const cachedValue = await redisClient.get(cacheKey);
+      cachedValue = await redisClient.get(cacheKey);
+    } catch (error: unknown) {
+      throw new RedisCacheReadError({ cause: error });
+    }
 
-      return cachedValue ? this.parseCachedJsonObject(cachedValue) : null;
-    } catch {
+    if (cachedValue === null) {
       return null;
     }
+
+    const cachedJsonObject = this.parseCachedJsonObject(cachedValue);
+
+    if (!cachedJsonObject) {
+      throw new RedisCacheParseError();
+    }
+
+    return cachedJsonObject;
   }
 
   /**
    * Attempts to load and parse a JSON object from Redis using a JWT-derived cache key.
    *
-   * Invalid token payloads and missing identifying claims are treated as cache misses.
+   * Invalid token payloads and missing identifying claims are treated as cache misses. Redis setup, read, and payload
+   * errors are treated as cache errors.
    *
    * @param app - Express application that may hold the Redis client on `locals`.
    * @param accessToken - JWT access token containing the user-identifying claim.
    * @param userStateConfiguration - User-state route/cache configuration supplied by the application.
    * @returns The cached object, or `null` when no usable cached value is available.
+   * @throws RedisCacheError when Redis cannot be read as the source of truth.
    */
   public async getCachedJsonObjectForAccessToken(
     app: Application,
     accessToken: string,
     userStateConfiguration: UserStateConfiguration,
   ): Promise<CachedJsonObject | null> {
-    const { cacheKeyPrefix, redisClientKey, tokenClaim } = userStateConfiguration;
+    const { cacheKeyPrefix, tokenClaim } = userStateConfiguration;
     const cacheKey = this.getCacheKey(accessToken, tokenClaim, cacheKeyPrefix);
 
     if (!cacheKey) {
       return null;
     }
 
-    return this.getCachedJsonObject(app, cacheKey, redisClientKey);
+    return this.getCachedJsonObject(app, cacheKey);
   }
 }

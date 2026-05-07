@@ -1,5 +1,4 @@
 class ProxyConfiguration {
-  opalApiUrl: string | null = null;
   opalFinesServiceUrl: string | null = null;
   opalUserServiceUrl: string | null = null;
   opalRmServiceUrl: string | null = null;

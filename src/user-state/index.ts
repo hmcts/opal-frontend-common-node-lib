@@ -2,7 +2,12 @@ import type { Application, Request, Response } from 'express';
 import type OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
 import type UserStateConfiguration from '../interfaces/user-state-config.js';
 import { getUserStateFromUserService } from '../services/opal-user-service.js';
-import RedisService from '../services/redis-service.js';
+import RedisService, {
+  RedisCacheParseError,
+  RedisCacheReadError,
+  RedisClientUnavailableError,
+  type CachedJsonObject,
+} from '../services/redis-service.js';
 import { Jwt } from '../utils/index.js';
 
 export interface UserStateHandlerOptions {
@@ -30,6 +35,36 @@ function sendDownstreamResponse(res: Response, status: number, data: unknown): v
 
 function isSuccessfulResponse(status: number): boolean {
   return status >= 200 && status < 300;
+}
+
+function isRedisCacheError(error: unknown): boolean {
+  return (
+    error instanceof RedisClientUnavailableError ||
+    error instanceof RedisCacheReadError ||
+    error instanceof RedisCacheParseError
+  );
+}
+
+function sendCacheFailureResponse(res: Response): void {
+  res.status(503).send({ message: 'Unable to retrieve user state from cache' });
+}
+
+async function getCachedUserState(
+  app: Application,
+  cacheKey: string,
+  redisService: RedisService,
+  res: Response,
+): Promise<CachedJsonObject | null | undefined> {
+  try {
+    return await redisService.getCachedJsonObject(app, cacheKey);
+  } catch (error: unknown) {
+    if (!isRedisCacheError(error)) {
+      throw error;
+    }
+
+    sendCacheFailureResponse(res);
+    return undefined;
+  }
 }
 
 /**
@@ -70,7 +105,11 @@ export async function getUserState({
     return;
   }
 
-  const cachedUserState = await redisService.getCachedJsonObject(app, cacheKey, userStateConfiguration.redisClientKey);
+  const cachedUserState = await getCachedUserState(app, cacheKey, redisService, res);
+
+  if (cachedUserState === undefined) {
+    return;
+  }
 
   if (cachedUserState) {
     res.status(200).json(cachedUserState);
@@ -84,11 +123,11 @@ export async function getUserState({
   );
 
   if (isSuccessfulResponse(userStateResponse.status)) {
-    const repopulatedUserState = await redisService.getCachedJsonObject(
-      app,
-      cacheKey,
-      userStateConfiguration.redisClientKey,
-    );
+    const repopulatedUserState = await getCachedUserState(app, cacheKey, redisService, res);
+
+    if (repopulatedUserState === undefined) {
+      return;
+    }
 
     if (repopulatedUserState) {
       res.status(200).json(repopulatedUserState);
