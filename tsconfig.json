@@ -55,8 +55,17 @@
       "@hmcts/opal-frontend-common-node/proxy/opal-api-proxy/*": [
         "./src/proxy/opal-api-proxy/*",
       ],
+      "@hmcts/opal-frontend-common-node/routes": [
+        "./src/routes/index.ts",
+      ],
       "@hmcts/opal-frontend-common-node/routes/*": [
         "./src/routes/*",
+      ],
+      "@hmcts/opal-frontend-common-node/services": [
+        "./src/services/index.ts",
+      ],
+      "@hmcts/opal-frontend-common-node/services/*": [
+        "./src/services/*",
       ],
       "@hmcts/opal-frontend-common-node/session/*": [
         "./src/session/*",
@@ -66,6 +75,12 @@
       ],
       "@hmcts/opal-frontend-common-node/session/session-storage/*": [
         "./src/session/session-storage/*",
+      ],
+      "@hmcts/opal-frontend-common-node/user-state": [
+        "./src/user-state/index.ts",
+      ],
+      "@hmcts/opal-frontend-common-node/user-state/*": [
+        "./src/user-state/*",
       ]
     }
   },

@@ -7,6 +7,7 @@ export * from './properties-volume/index.js';
 export * from './csrf-token/index.js';
 export * from './routes/index.js';
 export * from './services/index.js';
+export * from './user-state/index.js';
 
 // INTERFACES
 export * from './interfaces/index.js';

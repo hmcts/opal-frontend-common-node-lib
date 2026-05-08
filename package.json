@@ -1,7 +1,7 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
   "engines": {
@@ -39,6 +39,9 @@
       "csrf-token": [
         "dist/csrf-token/index.d.ts"
       ],
+      "user-state": [
+        "dist/user-state/index.d.ts"
+      ],
       "routes": [
         "dist/routes/index.d.ts"
       ],
@@ -56,6 +59,9 @@
       ],
       "interfaces/sso-config": [
         "dist/interfaces/sso-config.d.ts"
+      ],
+      "interfaces/user-state-config": [
+        "dist/interfaces/user-state-config.d.ts"
       ],
       "interfaces/session-config": [
         "dist/interfaces/session-config.d.ts"
@@ -171,6 +177,10 @@
       "import": "./dist/csrf-token/index.js",
       "types": "./dist/csrf-token/index.d.ts"
     },
+    "./user-state": {
+      "import": "./dist/user-state/index.js",
+      "types": "./dist/user-state/index.d.ts"
+    },
     "./routes": {
       "import": "./dist/routes/index.js",
       "types": "./dist/routes/index.d.ts"
@@ -194,6 +204,10 @@
     "./interfaces/sso-config": {
       "import": "./dist/interfaces/sso-config.js",
       "types": "./dist/interfaces/sso-config.d.ts"
+    },
+    "./interfaces/user-state-config": {
+      "import": "./dist/interfaces/user-state-config.js",
+      "types": "./dist/interfaces/user-state-config.d.ts"
     },
     "./interfaces/session-config": {
       "import": "./dist/interfaces/session-config.js",
