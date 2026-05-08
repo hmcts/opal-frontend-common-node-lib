@@ -13,7 +13,7 @@ import SsoConfiguration from '../interfaces/sso-config.js';
 import SessionConfiguration from '../interfaces/session-config.js';
 import ssoLogoutCallback from '../sso/sso-logout-callback.js';
 import OpalUserServiceConfig from '../interfaces/opal-user-service-config.js';
-import UserStateConfiguration from '../interfaces/user-state-config.js';
+import type UserStateConfiguration from '../interfaces/user-state-config.js';
 import { getUserState } from '../user-state/index.js';
 
 export interface EnableRoutesOptions {

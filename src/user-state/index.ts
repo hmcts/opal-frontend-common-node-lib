@@ -10,6 +10,8 @@ import RedisService, {
 } from '../services/redis-service.js';
 import { Jwt } from '../utils/index.js';
 
+const USER_STATE_CACHE_FAILURE_MESSAGE = 'Unable to retrieve user state from cache';
+
 export interface UserStateHandlerOptions {
   app: Application;
   opalUserServiceConfig: OpalUserServiceConfiguration;
@@ -46,7 +48,7 @@ function isRedisCacheError(error: unknown): boolean {
 }
 
 function sendCacheFailureResponse(res: Response): void {
-  res.status(503).send({ message: 'Unable to retrieve user state from cache' });
+  res.status(503).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
 }
 
 function getMatchingUserState(cachedUserState: CachedJsonObject | null, cacheKey: string): CachedJsonObject | null {
@@ -146,7 +148,7 @@ export async function getUserState({
       return;
     }
 
-    res.status(502).send({ message: 'Unable to retrieve user state from cache' });
+    res.status(502).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
     return;
   }
 

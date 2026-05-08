@@ -1,7 +1,5 @@
-class UserStateConfiguration {
-  cacheKeyPrefix!: string;
-  routePath!: string;
-  tokenClaim!: string;
+export default interface UserStateConfiguration {
+  cacheKeyPrefix: string;
+  routePath: string;
+  tokenClaim: string;
 }
-
-export default UserStateConfiguration;
