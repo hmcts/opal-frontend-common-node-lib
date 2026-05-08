@@ -49,6 +49,14 @@ function sendCacheFailureResponse(res: Response): void {
   res.status(503).send({ message: 'Unable to retrieve user state from cache' });
 }
 
+function getMatchingUserState(cachedUserState: CachedJsonObject | null, cacheKey: string): CachedJsonObject | null {
+  if (!cachedUserState) {
+    return null;
+  }
+
+  return cachedUserState['cache_name'] === cacheKey ? cachedUserState : null;
+}
+
 async function getCachedUserState(
   app: Application,
   cacheKey: string,
@@ -111,8 +119,10 @@ export async function getUserState({
     return;
   }
 
-  if (cachedUserState) {
-    res.status(200).json(cachedUserState);
+  const matchingCachedUserState = getMatchingUserState(cachedUserState, cacheKey);
+
+  if (matchingCachedUserState) {
+    res.status(200).json(matchingCachedUserState);
     return;
   }
 
@@ -129,8 +139,10 @@ export async function getUserState({
       return;
     }
 
-    if (repopulatedUserState) {
-      res.status(200).json(repopulatedUserState);
+    const matchingRepopulatedUserState = getMatchingUserState(repopulatedUserState, cacheKey);
+
+    if (matchingRepopulatedUserState) {
+      res.status(200).json(matchingRepopulatedUserState);
       return;
     }
 
