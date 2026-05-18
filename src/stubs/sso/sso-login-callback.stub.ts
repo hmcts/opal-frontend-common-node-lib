@@ -11,7 +11,7 @@ import axios from 'axios';
  * @param req - Express request object, expects an 'email' query parameter.
  * @param res - Express response object.
  * @param next - Express next middleware function.
- * @param opalApiUrl - The base URL of the Opal API, used to construct the token minting endpoint.
+ * @param opalUserServiceUrl - The base URL of the Opal User Service, used to construct the token minting endpoint.
  *
  * @remarks
  * - If the 'email' query parameter is missing, the middleware logs an error and calls `next` with the error.
@@ -19,7 +19,12 @@ import axios from 'axios';
  * - On success, the access token is stored in `req.session.securityToken` and the user is redirected to the root path.
  * - Intended for use in test and development environments only.
  */
-export default async function ssoLoginCallback(req: Request, res: Response, next: NextFunction, opalApiUrl: string) {
+export default async function ssoLoginCallback(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  opalUserServiceUrl: string,
+) {
   const logger = Logger.getLogger('login-callback-stub');
 
   try {
@@ -30,10 +35,10 @@ export default async function ssoLoginCallback(req: Request, res: Response, next
       return next(error);
     }
 
-    const internalJwtUrl = `${opalApiUrl}/testing-support/token/user`;
+    const testingSupportTokenUrl = `${opalUserServiceUrl}/testing-support/token/user`;
 
     // Ask testing-support to mint a token for the supplied email
-    const result = await axios.get(internalJwtUrl, {
+    const result = await axios.get(testingSupportTokenUrl, {
       headers: { 'X-User-Email': email },
     });
 

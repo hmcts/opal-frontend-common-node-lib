@@ -1,7 +1,7 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.29",
+  "version": "0.0.31",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
   "engines": {
@@ -21,6 +21,9 @@
       "app-insights": [
         "dist/app-insights/index.d.ts"
       ],
+      "constants": [
+        "dist/constants/index.d.ts"
+      ],
       "health": [
         "dist/health/index.d.ts"
       ],
@@ -35,6 +38,9 @@
       ],
       "csrf-token": [
         "dist/csrf-token/index.d.ts"
+      ],
+      "user-state": [
+        "dist/user-state/index.d.ts"
       ],
       "routes": [
         "dist/routes/index.d.ts"
@@ -53,6 +59,9 @@
       ],
       "interfaces/sso-config": [
         "dist/interfaces/sso-config.d.ts"
+      ],
+      "interfaces/user-state-config": [
+        "dist/interfaces/user-state-config.d.ts"
       ],
       "interfaces/session-config": [
         "dist/interfaces/session-config.d.ts"
@@ -113,7 +122,7 @@
     "express": "^5.0.0",
     "express-session": "^1.17.3",
     "helmet": "^8.0.0",
-    "http-proxy-middleware": "^3.0.0",
+    "http-proxy-middleware": "^4.0.0",
     "luxon": "^3.4.3",
     "redis": "^5.0.0",
     "session-file-store": "^1.5.0",
@@ -126,15 +135,15 @@
     "@types/luxon": "^3.4.2",
     "@types/node": "^24.0.0",
     "@types/session-file-store": "^1.2.5",
-    "@typescript-eslint/eslint-plugin": "8.58.0",
-    "@typescript-eslint/parser": "8.58.0",
+    "@typescript-eslint/eslint-plugin": "8.59.3",
+    "@typescript-eslint/parser": "8.59.3",
     "eslint": "^10.0.0",
     "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.0.3",
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.30.1"
   },
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@4.14.1",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -143,6 +152,10 @@
     "./app-insights": {
       "import": "./dist/app-insights/index.js",
       "types": "./dist/app-insights/index.d.ts"
+    },
+    "./constants": {
+      "import": "./dist/constants/index.js",
+      "types": "./dist/constants/index.d.ts"
     },
     "./health": {
       "import": "./dist/health/index.js",
@@ -163,6 +176,10 @@
     "./csrf-token": {
       "import": "./dist/csrf-token/index.js",
       "types": "./dist/csrf-token/index.d.ts"
+    },
+    "./user-state": {
+      "import": "./dist/user-state/index.js",
+      "types": "./dist/user-state/index.d.ts"
     },
     "./routes": {
       "import": "./dist/routes/index.js",
@@ -187,6 +204,10 @@
     "./interfaces/sso-config": {
       "import": "./dist/interfaces/sso-config.js",
       "types": "./dist/interfaces/sso-config.d.ts"
+    },
+    "./interfaces/user-state-config": {
+      "import": "./dist/interfaces/user-state-config.js",
+      "types": "./dist/interfaces/user-state-config.d.ts"
     },
     "./interfaces/session-config": {
       "import": "./dist/interfaces/session-config.js",

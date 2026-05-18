@@ -6,6 +6,7 @@ import { Application } from 'express';
 import session from 'express-session';
 import { createClient } from 'redis';
 import FileStoreFactory from 'session-file-store';
+import { REDIS_CLIENT_APP_LOCAL_KEY } from '../../constants/redis-client-app-local-key.js';
 
 const FileStore = FileStoreFactory(session);
 const logger = Logger.getLogger('session-storage');
@@ -36,7 +37,7 @@ export default class SessionStorage {
         process.exit();
       });
 
-      app.locals['redisClient'] = client;
+      app.locals[REDIS_CLIENT_APP_LOCAL_KEY] = client;
       return new RedisStore({ client });
     }
 
