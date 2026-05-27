@@ -6,6 +6,7 @@ class TransferServerState {
   ssoEnabled!: boolean;
   appInsightsConfig!: AppInsightsConfig;
   userStateCacheExpirationMilliseconds!: number;
+  userStateDomain!: string;
 }
 
 export default TransferServerState;
