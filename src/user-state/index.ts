@@ -103,7 +103,9 @@ export async function getUserState({
   );
 
   if (isSuccessfulResponse(userStateResponse.status)) {
-    logger.info('opal-user-service returned user state successfully, reading repopulated cache');
+    logger.info('opal-user-service returned successful response for user state, reading repopulated cache', {
+      status: userStateResponse.status,
+    });
     const repopulatedUserState = await getCachedUserStateForAccessToken({
       accessToken,
       app,

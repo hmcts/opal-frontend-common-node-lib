@@ -30,6 +30,7 @@ async function getCachedUserCheckResult(
   options?: HandleCheckUserOptions,
 ): Promise<UserCheckResult | null> {
   if (!options) {
+    logger.info('User-state cache lookup skipped during user check: cache configuration not provided');
     return null;
   }
 
@@ -42,9 +43,11 @@ async function getCachedUserCheckResult(
 
   switch (cachedUserState.status) {
     case 'hit':
+      logger.info('User-state cache hit during user check');
       return { status: 200 };
 
     case 'invalid-token':
+      logger.warn('Unable to derive user-state cache key during user check');
       return { status: 401 };
 
     case 'cache-error':
@@ -52,6 +55,7 @@ async function getCachedUserCheckResult(
       return { status: 503 };
 
     case 'miss':
+      logger.info('User-state cache miss during user check, checking opal-user-service');
       return null;
   }
 }
@@ -75,6 +79,7 @@ async function checkUserExists(
   }
 
   try {
+    logger.info('Checking user state with opal-user-service');
     const response = await axios.get(`${opalUserServiceTarget}${userStateUrl}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -92,6 +97,7 @@ async function checkUserExists(
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       if (status) {
+        logger.info('opal-user-service user state check returned non-success response', { status });
         return {
           status,
           // For 409 conflicts, extract user_id from resourceId

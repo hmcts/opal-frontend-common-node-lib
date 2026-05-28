@@ -88,7 +88,7 @@ export class Routes {
 
     // LOGOUT CALLBACK
     app.get(ssoConfiguration.logoutCallback, (req: Request, res: Response, next: NextFunction) =>
-      ssoLogoutCallback(req, res, next, routesConfiguration.prefix),
+      ssoLogoutCallback(req, res, next, routesConfiguration.prefix, { userStateConfiguration }),
     );
 
     // AUTHENTICATED

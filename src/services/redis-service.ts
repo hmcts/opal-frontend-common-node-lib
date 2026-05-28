@@ -5,6 +5,7 @@ import { decodeObject } from '../utils/base64.js';
 
 export interface RedisClient {
   get(key: string): Promise<string | null>;
+  del?: (key: string) => Promise<number>;
 }
 
 interface JwtPayload {
@@ -27,6 +28,13 @@ export class RedisCacheReadError extends Error {
   }
 }
 
+export class RedisCacheDeleteError extends Error {
+  public constructor(options?: { cause?: unknown }) {
+    super('Unable to delete from Redis cache', options);
+    this.name = 'RedisCacheDeleteError';
+  }
+}
+
 export class RedisCacheParseError extends Error {
   public constructor() {
     super('Redis cache payload is not a JSON object');
@@ -34,7 +42,11 @@ export class RedisCacheParseError extends Error {
   }
 }
 
-export type RedisCacheError = RedisClientUnavailableError | RedisCacheReadError | RedisCacheParseError;
+export type RedisCacheError =
+  | RedisClientUnavailableError
+  | RedisCacheReadError
+  | RedisCacheDeleteError
+  | RedisCacheParseError;
 
 export default class RedisService {
   /**
@@ -145,6 +157,28 @@ export default class RedisService {
     }
 
     return cachedJsonObject;
+  }
+
+  /**
+   * Deletes a cache entry from Redis.
+   *
+   * @param app - Express application that may hold the Redis client on `locals`.
+   * @param cacheKey - Redis key for the cached payload.
+   * @returns true when an entry was deleted, false when the key was not present.
+   * @throws RedisCacheError when Redis cannot be written to.
+   */
+  public async deleteCachedJsonObject(app: Application, cacheKey: string): Promise<boolean> {
+    const redisClient = this.getRedisClient(app);
+
+    if (!redisClient || typeof redisClient.del !== 'function') {
+      throw new RedisClientUnavailableError();
+    }
+
+    try {
+      return (await redisClient.del(cacheKey)) > 0;
+    } catch (error: unknown) {
+      throw new RedisCacheDeleteError({ cause: error });
+    }
   }
 
   /**

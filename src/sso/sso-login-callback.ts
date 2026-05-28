@@ -49,6 +49,8 @@ export default async function ssoLoginCallbackHandler({
     redirectUri: `${frontendHostname}${ssoLoginCallback}`,
   };
 
+  logger.info('SSO login callback received');
+
   if (!tokenRequest.code) {
     logger.warn('Missing authorization code on SSO callback');
     res.status(400).send('Missing authorization code');
@@ -84,6 +86,7 @@ export default async function ssoLoginCallbackHandler({
     if (!response?.accessToken) throw new Error('No access token in token response');
 
     const accessToken = response.accessToken;
+    logger.info('SSO access token acquired, checking user management state');
     // Validate and manage user in opal-user-service
     const userManagementSuccess = await handleCheckUser(
       opalUserServiceUrl,
@@ -97,13 +100,18 @@ export default async function ssoLoginCallbackHandler({
       return;
     }
 
+    logger.info('SSO user management completed successfully');
+
     const securityToken: SecurityToken = {
       user_state: undefined,
       access_token: accessToken,
     };
 
     req.session.securityToken = securityToken;
-    req.session.save(() => res.redirect(frontendHostname));
+    req.session.save(() => {
+      logger.info('SSO login callback completed, redirecting to frontend');
+      res.redirect(frontendHostname);
+    });
     return;
   } catch (error) {
     logger.error('Error on SSO Login Callback', {
