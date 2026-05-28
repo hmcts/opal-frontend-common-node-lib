@@ -5,6 +5,7 @@ import { SecurityToken } from '../interfaces/index.js';
 import { Logger } from '@hmcts/nodejs-logging';
 import { handleCheckUser } from '../services/opal-user-service.js';
 import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
+import type UserStateConfiguration from '../interfaces/user-state-config.js';
 
 const logger = Logger.getLogger('sso-login-callback');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -18,6 +19,7 @@ export interface SsoLoginCallbackHandlerOptions {
   clientId: string;
   opalUserServiceConfig: OpalUserServiceConfiguration;
   opalUserServiceUrl: string;
+  userStateConfiguration?: UserStateConfiguration;
 }
 
 /**
@@ -38,6 +40,7 @@ export default async function ssoLoginCallbackHandler({
   clientId,
   opalUserServiceConfig,
   opalUserServiceUrl,
+  userStateConfiguration,
 }: SsoLoginCallbackHandlerOptions): Promise<void> {
   // Build the token request for MSAL using the auth code returned by the IdP.
   const tokenRequest = {
@@ -82,7 +85,12 @@ export default async function ssoLoginCallbackHandler({
 
     const accessToken = response.accessToken;
     // Validate and manage user in opal-user-service
-    const userManagementSuccess = await handleCheckUser(opalUserServiceUrl, accessToken, opalUserServiceConfig);
+    const userManagementSuccess = await handleCheckUser(
+      opalUserServiceUrl,
+      accessToken,
+      opalUserServiceConfig,
+      userStateConfiguration ? { app: req.app, userStateConfiguration } : undefined,
+    );
     if (!userManagementSuccess) {
       logger.error('User management failed after successful token acquisition');
       res.status(500).send('User validation failed');

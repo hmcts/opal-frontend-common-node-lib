@@ -1,16 +1,13 @@
 import type { Application, Request, Response } from 'express';
+import { Logger } from '@hmcts/nodejs-logging';
 import type OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
 import type UserStateConfiguration from '../interfaces/user-state-config.js';
 import { getUserStateFromUserService } from '../services/opal-user-service.js';
-import RedisService, {
-  RedisCacheParseError,
-  RedisCacheReadError,
-  RedisClientUnavailableError,
-  type CachedJsonObject,
-} from '../services/redis-service.js';
+import RedisService from '../services/redis-service.js';
 import { Jwt } from '../utils/index.js';
+import { getCachedUserStateForAccessToken, USER_STATE_CACHE_FAILURE_MESSAGE } from './user-state-cache.js';
 
-const USER_STATE_CACHE_FAILURE_MESSAGE = 'Unable to retrieve user state from cache';
+const logger = Logger.getLogger('user-state');
 
 export interface UserStateHandlerOptions {
   app: Application;
@@ -39,42 +36,8 @@ function isSuccessfulResponse(status: number): boolean {
   return status >= 200 && status < 300;
 }
 
-function isRedisCacheError(error: unknown): boolean {
-  return (
-    error instanceof RedisClientUnavailableError ||
-    error instanceof RedisCacheReadError ||
-    error instanceof RedisCacheParseError
-  );
-}
-
 function sendCacheFailureResponse(res: Response): void {
   res.status(503).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
-}
-
-function getMatchingUserState(cachedUserState: CachedJsonObject | null, cacheKey: string): CachedJsonObject | null {
-  if (!cachedUserState) {
-    return null;
-  }
-
-  return cachedUserState['cache_name'] === cacheKey ? cachedUserState : null;
-}
-
-async function getCachedUserState(
-  app: Application,
-  cacheKey: string,
-  redisService: RedisService,
-  res: Response,
-): Promise<CachedJsonObject | null | undefined> {
-  try {
-    return await redisService.getCachedJsonObject(app, cacheKey);
-  } catch (error: unknown) {
-    if (!isRedisCacheError(error)) {
-      throw error;
-    }
-
-    sendCacheFailureResponse(res);
-    return undefined;
-  }
 }
 
 /**
@@ -100,32 +63,37 @@ export async function getUserState({
   const accessToken = getAccessToken(req);
 
   if (!accessToken || Jwt.isJwtExpired(accessToken)) {
+    logger.warn('Unable to retrieve user state: missing or expired access token');
     res.sendStatus(401);
     return;
   }
 
-  const cacheKey = redisService.getCacheKey(
+  const cachedUserState = await getCachedUserStateForAccessToken({
     accessToken,
-    userStateConfiguration.tokenClaim,
-    userStateConfiguration.cacheKeyPrefix,
-  );
+    app,
+    redisService,
+    userStateConfiguration,
+  });
 
-  if (!cacheKey) {
-    res.sendStatus(401);
-    return;
-  }
+  switch (cachedUserState.status) {
+    case 'hit':
+      logger.info('User state cache hit');
+      res.status(200).json(cachedUserState.userState);
+      return;
 
-  const cachedUserState = await getCachedUserState(app, cacheKey, redisService, res);
+    case 'invalid-token':
+      logger.warn('Unable to derive user state cache key from access token');
+      res.sendStatus(401);
+      return;
 
-  if (cachedUserState === undefined) {
-    return;
-  }
+    case 'cache-error':
+      logger.error('Unable to retrieve user state from cache', cachedUserState.error);
+      sendCacheFailureResponse(res);
+      return;
 
-  const matchingCachedUserState = getMatchingUserState(cachedUserState, cacheKey);
-
-  if (matchingCachedUserState) {
-    res.status(200).json(matchingCachedUserState);
-    return;
+    case 'miss':
+      logger.info('User state cache miss, retrieving from opal-user-service');
+      break;
   }
 
   const userStateResponse = await getUserStateFromUserService(
@@ -135,22 +103,37 @@ export async function getUserState({
   );
 
   if (isSuccessfulResponse(userStateResponse.status)) {
-    const repopulatedUserState = await getCachedUserState(app, cacheKey, redisService, res);
+    logger.info('opal-user-service returned user state successfully, reading repopulated cache');
+    const repopulatedUserState = await getCachedUserStateForAccessToken({
+      accessToken,
+      app,
+      redisService,
+      userStateConfiguration,
+    });
 
-    if (repopulatedUserState === undefined) {
-      return;
+    switch (repopulatedUserState.status) {
+      case 'hit':
+        logger.info('Repopulated user state cache hit');
+        res.status(200).json(repopulatedUserState.userState);
+        return;
+
+      case 'invalid-token':
+        logger.warn('Unable to derive user state cache key from access token after opal-user-service response');
+        res.sendStatus(401);
+        return;
+
+      case 'cache-error':
+        logger.error('Unable to retrieve repopulated user state from cache', repopulatedUserState.error);
+        sendCacheFailureResponse(res);
+        return;
+
+      case 'miss':
+        logger.error('opal-user-service returned success but user state was not available in cache');
+        res.status(502).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
+        return;
     }
-
-    const matchingRepopulatedUserState = getMatchingUserState(repopulatedUserState, cacheKey);
-
-    if (matchingRepopulatedUserState) {
-      res.status(200).json(matchingRepopulatedUserState);
-      return;
-    }
-
-    res.status(502).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
-    return;
   }
 
+  logger.warn('opal-user-service returned non-success response for user state', { status: userStateResponse.status });
   sendDownstreamResponse(res, userStateResponse.status, userStateResponse.data);
 }

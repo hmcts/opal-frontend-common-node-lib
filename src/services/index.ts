@@ -1,5 +1,5 @@
 export { getUserStateFromUserService, handleCheckUser } from './opal-user-service.js';
-export type { UserStateLookupResult } from './opal-user-service.js';
+export type { HandleCheckUserOptions, UserStateLookupResult } from './opal-user-service.js';
 export {
   default as RedisService,
   RedisCacheParseError,

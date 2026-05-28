@@ -1,12 +1,59 @@
 import axios from 'axios';
+import type { Application } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
 import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
+import type UserStateConfiguration from '../interfaces/user-state-config.js';
+import { getCachedUserStateForAccessToken } from '../user-state/user-state-cache.js';
+import type RedisService from './redis-service.js';
 
 const logger = Logger.getLogger('opal-user-service');
 
 export interface UserStateLookupResult {
   data: unknown;
   status: number;
+}
+
+interface UserCheckResult {
+  status: number;
+  user_id?: string;
+  version?: string;
+}
+
+export interface HandleCheckUserOptions {
+  app: Application;
+  redisService?: RedisService;
+  userStateConfiguration: UserStateConfiguration;
+}
+
+async function getCachedUserCheckResult(
+  accessToken: string,
+  options?: HandleCheckUserOptions,
+): Promise<UserCheckResult | null> {
+  if (!options) {
+    return null;
+  }
+
+  const cachedUserState = await getCachedUserStateForAccessToken({
+    accessToken,
+    app: options.app,
+    redisService: options.redisService,
+    userStateConfiguration: options.userStateConfiguration,
+  });
+
+  switch (cachedUserState.status) {
+    case 'hit':
+      return { status: 200 };
+
+    case 'invalid-token':
+      return { status: 401 };
+
+    case 'cache-error':
+      logger.error('Unable to read cached user state when checking user', cachedUserState.error);
+      return { status: 503 };
+
+    case 'miss':
+      return null;
+  }
 }
 
 /**
@@ -19,7 +66,14 @@ async function checkUserExists(
   opalUserServiceTarget: string,
   accessToken: string,
   userStateUrl: string,
-): Promise<{ status: number; user_id?: string; version?: string }> {
+  options?: HandleCheckUserOptions,
+): Promise<UserCheckResult> {
+  const cachedUserResult = await getCachedUserCheckResult(accessToken, options);
+
+  if (cachedUserResult) {
+    return cachedUserResult;
+  }
+
   try {
     const response = await axios.get(`${opalUserServiceTarget}${userStateUrl}`, {
       headers: {
@@ -174,8 +228,9 @@ export async function handleCheckUser(
   opalUserServiceTarget: string,
   accessToken: string,
   config: OpalUserServiceConfiguration,
+  options?: HandleCheckUserOptions,
 ): Promise<boolean> {
-  const userResult = await checkUserExists(opalUserServiceTarget, accessToken, config.userStateUrl);
+  const userResult = await checkUserExists(opalUserServiceTarget, accessToken, config.userStateUrl, options);
 
   switch (userResult.status) {
     case 200:

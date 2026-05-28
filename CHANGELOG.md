@@ -20,6 +20,8 @@ The format is based on Keep a Changelog and this project follows semantic versio
   client.
 - Remove the obsolete generic `opalApiUrl` proxy configuration from `ProxyConfiguration` and default proxy
   config.
+- Use the configured Redis-backed user-state route cache during SSO user checks to avoid refreshing Redis on repeat
+  sign-ins when cached state already exists.
 
 ## Changelog Policy
 
