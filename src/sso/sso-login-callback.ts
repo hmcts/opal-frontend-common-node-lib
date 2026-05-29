@@ -5,6 +5,7 @@ import { SecurityToken } from '../interfaces/index.js';
 import { Logger } from '@hmcts/nodejs-logging';
 import { handleCheckUser } from '../services/opal-user-service.js';
 import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
+import type UserStateConfiguration from '../interfaces/user-state-config.js';
 
 const logger = Logger.getLogger('sso-login-callback');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -18,6 +19,7 @@ export interface SsoLoginCallbackHandlerOptions {
   clientId: string;
   opalUserServiceConfig: OpalUserServiceConfiguration;
   opalUserServiceUrl: string;
+  userStateConfiguration?: UserStateConfiguration;
 }
 
 /**
@@ -38,6 +40,7 @@ export default async function ssoLoginCallbackHandler({
   clientId,
   opalUserServiceConfig,
   opalUserServiceUrl,
+  userStateConfiguration,
 }: SsoLoginCallbackHandlerOptions): Promise<void> {
   // Build the token request for MSAL using the auth code returned by the IdP.
   const tokenRequest = {
@@ -45,6 +48,8 @@ export default async function ssoLoginCallbackHandler({
     scopes: [`api://${clientId}/opalinternaluser`],
     redirectUri: `${frontendHostname}${ssoLoginCallback}`,
   };
+
+  logger.info('SSO login callback received');
 
   if (!tokenRequest.code) {
     logger.warn('Missing authorization code on SSO callback');
@@ -81,13 +86,21 @@ export default async function ssoLoginCallbackHandler({
     if (!response?.accessToken) throw new Error('No access token in token response');
 
     const accessToken = response.accessToken;
+    logger.info('SSO access token acquired, checking user management state');
     // Validate and manage user in opal-user-service
-    const userManagementSuccess = await handleCheckUser(opalUserServiceUrl, accessToken, opalUserServiceConfig);
+    const userManagementSuccess = await handleCheckUser(
+      opalUserServiceUrl,
+      accessToken,
+      opalUserServiceConfig,
+      userStateConfiguration ? { app: req.app, userStateConfiguration } : undefined,
+    );
     if (!userManagementSuccess) {
       logger.error('User management failed after successful token acquisition');
       res.status(500).send('User validation failed');
       return;
     }
+
+    logger.info('SSO user management completed successfully');
 
     const securityToken: SecurityToken = {
       user_state: undefined,
@@ -95,7 +108,10 @@ export default async function ssoLoginCallbackHandler({
     };
 
     req.session.securityToken = securityToken;
-    req.session.save(() => res.redirect(frontendHostname));
+    req.session.save(() => {
+      logger.info('SSO login callback completed, redirecting to frontend');
+      res.redirect(frontendHostname);
+    });
     return;
   } catch (error) {
     logger.error('Error on SSO Login Callback', {
