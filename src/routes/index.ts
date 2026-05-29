@@ -42,6 +42,7 @@ export class Routes {
     ssoConfiguration: SsoConfiguration,
     routesConfiguration: RoutesConfiguration,
     opalUserServiceConfig: OpalUserServiceConfig,
+    userStateConfiguration: UserStateConfiguration,
     opalUserServiceUrl: string,
   ): void {
     if (!routesConfiguration.clientId || !routesConfiguration.clientSecret || !routesConfiguration.tenantId) {
@@ -72,6 +73,7 @@ export class Routes {
         clientId: routesConfiguration.clientId,
         opalUserServiceConfig,
         opalUserServiceUrl,
+        userStateConfiguration,
       }),
     );
 
@@ -86,7 +88,7 @@ export class Routes {
 
     // LOGOUT CALLBACK
     app.get(ssoConfiguration.logoutCallback, (req: Request, res: Response, next: NextFunction) =>
-      ssoLogoutCallback(req, res, next, routesConfiguration.prefix),
+      ssoLogoutCallback(req, res, next, routesConfiguration.prefix, { userStateConfiguration }),
     );
 
     // AUTHENTICATED
@@ -157,7 +159,14 @@ export class Routes {
     const opalUserServiceUrl = this.requireConfiguredUrl(proxyConfiguration.opalUserServiceUrl, 'opalUserServiceUrl');
 
     if (ssoEnabled) {
-      this.setupSSORoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceConfig, opalUserServiceUrl);
+      this.setupSSORoutes(
+        app,
+        ssoConfiguration,
+        routesConfiguration,
+        opalUserServiceConfig,
+        userStateConfiguration,
+        opalUserServiceUrl,
+      );
     } else {
       this.setupStubRoutes(app, ssoConfiguration, routesConfiguration, opalUserServiceUrl);
     }
