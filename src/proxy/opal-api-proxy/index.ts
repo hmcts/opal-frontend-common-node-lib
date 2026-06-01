@@ -39,7 +39,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
         if (logEnabled) {
           logger.info(`client ip: ${requestIp}`);
         }
-        proxyReq.setHeader('Want-Content-Digest', 'sha-256');
+        proxyReq.setHeader('Want-Content-Digest', 'sha-512');
 
         const body = req.body;
         const buffer = Buffer.isBuffer(body) ? body : null;

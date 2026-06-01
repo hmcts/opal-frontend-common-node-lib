@@ -11,20 +11,20 @@ function firstHeaderValue(value: HeaderValue): string | undefined {
 }
 
 /**
- * Extract base64 from a 'sha-256=:<base64>:' style header.
+ * Extract base64 from a 'sha-512=:<base64>:' style header.
  */
-export function parseSha256Base64(value: HeaderValue): string | null {
+export function parseSha512Base64(value: HeaderValue): string | null {
   const raw = firstHeaderValue(value);
   if (!raw) return null;
-  const match = /sha-256=:(.+?):/i.exec(raw);
+  const match = /sha-512=:(.+?):/i.exec(raw);
   return match ? match[1] : null;
 }
 
 /**
- * Compute base64 SHA-256 over the given bytes.
+ * Compute base64 SHA-512 over the given bytes.
  */
-export function sha256Base64(buf: Buffer): string {
-  return crypto.createHash('sha256').update(buf).digest('base64');
+export function sha512Base64(buf: Buffer): string {
+  return crypto.createHash('sha512').update(buf).digest('base64');
 }
 
 /**
@@ -61,12 +61,12 @@ export function verifyResponseDigest(responseBuffer: Buffer, proxyRes: IncomingM
     return responseBuffer;
   }
 
-  const expected = parseSha256Base64(digestHeader);
+  const expected = parseSha512Base64(digestHeader);
   if (!expected) {
     return failWithBadGateway(res, 'Upstream Content-Digest header malformed');
   }
 
-  const actual = sha256Base64(responseBuffer);
+  const actual = sha512Base64(responseBuffer);
   if (actual !== expected) {
     return failWithBadGateway(res, 'Upstream Content-Digest verification failed');
   }
