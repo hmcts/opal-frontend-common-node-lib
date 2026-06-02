@@ -3,7 +3,6 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "noImplicitOverride": true,
     "target": "ES2022",
