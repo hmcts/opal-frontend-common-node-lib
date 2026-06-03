@@ -7,6 +7,10 @@ class TransferServerState {
   appInsightsConfig!: AppInsightsConfig;
   userStateCacheExpirationMilliseconds!: number;
   userStateDomain!: string;
+  featureFlagConfig!: {
+    override: boolean;
+    releases: Record<string, boolean>;
+  };
 }
 
 export default TransferServerState;
