@@ -14,7 +14,8 @@ const logger = Logger.getLogger('session-storage');
 export default class SessionStorage {
   private getStore(app: Application, enabled: boolean, connectionString: string) {
     if (enabled) {
-      logger.info('Using Redis session store', connectionString);
+      const redisUrl = new URL(connectionString);
+      logger.info('Using Redis session store', `${redisUrl.protocol}//${redisUrl.host}`);
       const client = createClient({
         url: connectionString,
         socket: {
