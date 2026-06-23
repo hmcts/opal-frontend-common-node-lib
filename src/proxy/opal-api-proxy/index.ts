@@ -29,7 +29,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       proxyReq: (proxyReq, req: any) => {
         if (req.session.securityToken?.access_token) {
-         // proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
+          proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_tokeln}`);
         }
 
         const forwardedForHeader = req.headers?.['x-forwarded-for'];
