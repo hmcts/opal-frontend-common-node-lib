@@ -5,6 +5,7 @@ class RoutesConfiguration {
   clientSecret = '';
   tenantId = '';
   microsoftUrl = '';
+  internalServerErrorPath = '';
 
   constructor(initialValues?: Partial<RoutesConfiguration>) {
     Object.assign(this, initialValues);

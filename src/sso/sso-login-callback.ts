@@ -17,6 +17,7 @@ export interface SsoLoginCallbackHandlerOptions {
   msalInstance: ConfidentialClientApplication;
   ssoLoginCallback: string;
   frontendHostname: string;
+  internalServerErrorPath: string;
   clientId: string;
   opalUserServiceConfig: OpalUserServiceConfiguration;
   opalUserServiceUrl: string;
@@ -38,6 +39,7 @@ export default async function ssoLoginCallbackHandler({
   msalInstance,
   ssoLoginCallback,
   frontendHostname,
+  internalServerErrorPath,
   clientId,
   opalUserServiceConfig,
   opalUserServiceUrl,
@@ -45,9 +47,9 @@ export default async function ssoLoginCallbackHandler({
 }: SsoLoginCallbackHandlerOptions): Promise<void> {
   const operationId = appInsights.getCorrelationContext()?.operation?.id;
 
-  const internalServerErrorRedirectUrl = operationId
-    ? `${frontendHostname}/error/internal-server?operationId=${encodeURIComponent(operationId)}`
-    : `${frontendHostname}/error/internal-server`;
+  const internalServerErrorUrl = operationId
+    ? `${frontendHostname}${internalServerErrorPath}?operationId=${encodeURIComponent(operationId)}`
+    : `${frontendHostname}${internalServerErrorPath}`;
 
   // Build the token request for MSAL using the auth code returned by the IdP.
   const tokenRequest = {
@@ -60,7 +62,7 @@ export default async function ssoLoginCallbackHandler({
 
   if (!tokenRequest.code) {
     logger.warn('Missing authorization code on SSO callback');
-    res.redirect(303, internalServerErrorRedirectUrl);
+    res.redirect(303, internalServerErrorUrl);
     return;
   }
 
@@ -106,7 +108,7 @@ export default async function ssoLoginCallbackHandler({
 
     if (!userManagementSuccess) {
       logger.error('User management failed after successful token acquisition');
-      res.redirect(303, internalServerErrorRedirectUrl);
+      res.redirect(303, internalServerErrorUrl);
       return;
     }
 
@@ -132,6 +134,6 @@ export default async function ssoLoginCallbackHandler({
       correlationId: (error as any)?.correlationId,
     });
 
-    res.redirect(303, internalServerErrorRedirectUrl);
+    res.redirect(303, internalServerErrorUrl);
   }
 }

@@ -70,6 +70,7 @@ export class Routes {
         msalInstance: confidentialClient,
         ssoLoginCallback: ssoConfiguration.loginCallback,
         frontendHostname: routesConfiguration.frontendHostname,
+        internalServerErrorPath: routesConfiguration.internalServerErrorPath,
         clientId: routesConfiguration.clientId,
         opalUserServiceConfig,
         opalUserServiceUrl,
