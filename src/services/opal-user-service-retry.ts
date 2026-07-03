@@ -1,19 +1,5 @@
-/**
- * Describes how long to wait before retrying an operation.
- *
- * The helper supports either a fixed delay or a per-attempt delay function so callers can keep simple policies
- * simple while still allowing backoff when needed.
- */
-export type RetryDelay = number | ((attempt: number) => number);
-
-/**
- * Options for running an async operation with a bounded retry policy.
- */
-export interface BoundedRetryOptions {
-  maxAttempts: number;
-  delayMs: RetryDelay;
-  shouldRetry: (error: unknown, attempt: number) => boolean;
-}
+import type { BoundedRetryOptions } from './opal-user-service-bounded-retry-options.interface.js';
+import type { RetryDelay } from './opal-user-service-retry-delay.type.js';
 
 function wait(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
