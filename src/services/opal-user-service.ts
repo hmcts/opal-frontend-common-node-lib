@@ -52,6 +52,23 @@ function getHeaderString(value: string | string[] | undefined): string | undefin
   return typeof value === 'string' ? value : undefined;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function getSafeAxiosLogDetails(error: unknown): Record<string, number | string | undefined> {
+  if (!axios.isAxiosError(error)) {
+    return { message: getErrorMessage(error) };
+  }
+
+  return {
+    message: error.message,
+    code: error.code,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+  };
+}
+
 async function getCachedUserCheckResult(
   accessToken: string,
   options?: HandleCheckUserOptions,
@@ -145,14 +162,11 @@ async function checkUserExists(
         };
       }
 
-      logger.error('Axios error without response status when checking user state', {
-        message: error.message,
-        code: error.code,
-      });
+      logger.error('Axios error without response status when checking user state', getSafeAxiosLogDetails(error));
       return { status: 500 };
     }
 
-    logger.error('Unexpected error when checking user state', error);
+    logger.error('Unexpected error when checking user state', getSafeAxiosLogDetails(error));
     return { status: 500 };
   }
 }
@@ -182,8 +196,8 @@ async function addUser(
     );
 
     return response.status === 201 || response.status === 200;
-  } catch (error) {
-    logger.error('Error adding user', error);
+  } catch (error: unknown) {
+    logger.error('Error adding user', getSafeAxiosLogDetails(error));
     return false;
   }
 }
@@ -218,12 +232,9 @@ export async function getUserStateFromUserService(
     };
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      logger.error('Axios error without response when retrieving user state', {
-        message: error.message,
-        code: error.code,
-      });
+      logger.error('Axios error without response when retrieving user state', getSafeAxiosLogDetails(error));
     } else {
-      logger.error('Unexpected error when retrieving user state', error);
+      logger.error('Unexpected error when retrieving user state', getSafeAxiosLogDetails(error));
     }
 
     return {
@@ -266,19 +277,8 @@ async function updateUser(
     );
 
     return response.status === 200;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      logger.error('updateUser axios error', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url,
-        method: error.config?.method,
-        message: error.message,
-      });
-    } else {
-      logger.error('updateUser non-axios error', { error: String(error) });
-    }
+  } catch (error: unknown) {
+    logger.error('Error updating user', getSafeAxiosLogDetails(error));
     return false;
   }
 }
