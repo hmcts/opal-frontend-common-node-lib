@@ -69,6 +69,17 @@ function getSafeAxiosLogDetails(error: unknown): Record<string, number | string 
   };
 }
 
+function getSafeRetryLogDetails(
+  error: unknown,
+  config: OpalUserServiceConfiguration,
+): Record<string, number | string | undefined> {
+  return {
+    retryAttempts: config.retryAttempts,
+    retryDelayInMilliseconds: config.retryDelayInMilliseconds,
+    ...getSafeAxiosLogDetails(error),
+  };
+}
+
 async function getCachedUserCheckResult(
   accessToken: string,
   options?: HandleCheckUserOptions,
@@ -162,7 +173,10 @@ async function checkUserExists(
         };
       }
 
-      logger.error('Axios error without response status when checking user state', getSafeAxiosLogDetails(error));
+      logger.error(
+        'Retry exhausted when checking user state with opal-user-service',
+        getSafeRetryLogDetails(error, config),
+      );
       return { status: 500 };
     }
 
@@ -232,7 +246,10 @@ export async function getUserStateFromUserService(
     };
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      logger.error('Axios error without response when retrieving user state', getSafeAxiosLogDetails(error));
+      logger.error(
+        'Retry exhausted when retrieving user state from opal-user-service',
+        getSafeRetryLogDetails(error, config),
+      );
     } else {
       logger.error('Unexpected error when retrieving user state', getSafeAxiosLogDetails(error));
     }
