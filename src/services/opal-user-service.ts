@@ -1,10 +1,11 @@
-import axios from 'axios';
+import axios, { type AxiosResponse } from 'axios';
 import type { Application } from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
 import OpalUserServiceConfiguration from '../interfaces/opal-user-service-config.js';
 import type UserStateConfiguration from '../interfaces/user-state-config.js';
 import { getCachedUserStateForAccessToken } from '../user-state/user-state-cache.js';
 import type RedisService from './redis-service.js';
+import { withBoundedRetry } from './opal-user-service-retry.js';
 
 const logger = Logger.getLogger('opal-user-service');
 
@@ -19,10 +20,64 @@ interface UserCheckResult {
   version?: string;
 }
 
+interface UserStateCheckResponseData {
+  user_id?: string;
+}
+
+interface UserConflictResponseData {
+  resourceId?: string;
+}
+
 export interface HandleCheckUserOptions {
   app: Application;
   redisService?: RedisService;
   userStateConfiguration: UserStateConfiguration;
+}
+
+const RETRYABLE_AXIOS_ERROR_CODES = new Set(['ECONNRESET', 'ETIMEDOUT', 'ECONNABORTED']);
+
+function isRetryableAxiosError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (error.response) {
+    return false;
+  }
+
+  return !!error.code && RETRYABLE_AXIOS_ERROR_CODES.has(error.code);
+}
+
+function getHeaderString(value: string | string[] | undefined): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function getSafeAxiosLogDetails(error: unknown): Record<string, number | string | undefined> {
+  if (!axios.isAxiosError(error)) {
+    return { message: getErrorMessage(error) };
+  }
+
+  return {
+    message: error.message,
+    code: error.code,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+  };
+}
+
+function getSafeRetryLogDetails(
+  error: unknown,
+  config: OpalUserServiceConfiguration,
+): Record<string, number | string | undefined> {
+  return {
+    retryAttempts: config.retryAttempts,
+    retryDelayInMilliseconds: config.retryDelayInMilliseconds,
+    ...getSafeAxiosLogDetails(error),
+  };
 }
 
 async function getCachedUserCheckResult(
@@ -69,7 +124,7 @@ async function getCachedUserCheckResult(
 async function checkUserExists(
   opalUserServiceTarget: string,
   accessToken: string,
-  userStateUrl: string,
+  config: OpalUserServiceConfiguration,
   options?: HandleCheckUserOptions,
 ): Promise<UserCheckResult> {
   const cachedUserResult = await getCachedUserCheckResult(accessToken, options);
@@ -80,41 +135,52 @@ async function checkUserExists(
 
   try {
     logger.info('Checking user state with opal-user-service');
-    const response = await axios.get(`${opalUserServiceTarget}${userStateUrl}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'X-New-Login': 'true',
+    const response = await withBoundedRetry<AxiosResponse<UserStateCheckResponseData>>(
+      () =>
+        axios.get<UserStateCheckResponseData>(`${opalUserServiceTarget}${config.userStateUrl}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-New-Login': 'true',
+          },
+          timeout: config.timeoutInMilliseconds,
+        }),
+      {
+        maxAttempts: config.retryAttempts,
+        delayMs: config.retryDelayInMilliseconds,
+        shouldRetry: (error) => isRetryableAxiosError(error),
       },
-    });
+    );
 
     return {
       status: response.status,
       user_id: response.data?.user_id,
-      version: response.headers['etag'],
+      version: getHeaderString(response.headers['etag']),
     };
   } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status;
-      if (status) {
+    if (axios.isAxiosError<UserConflictResponseData>(error)) {
+      const response = error.response;
+      const status = response?.status;
+
+      if (response && status) {
         logger.info('opal-user-service user state check returned non-success response', { status });
         return {
           status,
           // For 409 conflicts, extract user_id from resourceId
-          user_id: error.response?.data?.resourceId,
+          user_id: response.data?.resourceId,
           // Extract version from ETag header (same as success case)
-          version: error.response?.headers['etag'],
+          version: getHeaderString(response.headers['etag']),
         };
       }
 
-      logger.error('Axios error without response status when checking user state', {
-        message: error.message,
-        code: error.code,
-      });
+      logger.error(
+        'Retry exhausted when checking user state with opal-user-service',
+        getSafeRetryLogDetails(error, config),
+      );
       return { status: 500 };
     }
 
-    logger.error('Unexpected error when checking user state', error);
+    logger.error('Unexpected error when checking user state', getSafeAxiosLogDetails(error));
     return { status: 500 };
   }
 }
@@ -125,22 +191,27 @@ async function checkUserExists(
  * @param accessToken - The access token for authentication
  * @returns Promise<boolean> - true if successful, false otherwise
  */
-async function addUser(opalUserServiceTarget: string, accessToken: string, addUserUrl: string): Promise<boolean> {
+async function addUser(
+  opalUserServiceTarget: string,
+  accessToken: string,
+  config: OpalUserServiceConfiguration,
+): Promise<boolean> {
   try {
     const response = await axios.post(
-      `${opalUserServiceTarget}${addUserUrl}`,
+      `${opalUserServiceTarget}${config.addUserUrl}`,
       {},
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        timeout: config.timeoutInMilliseconds,
       },
     );
 
     return response.status === 201 || response.status === 200;
-  } catch (error) {
-    logger.error('Error adding user', error);
+  } catch (error: unknown) {
+    logger.error('Error adding user', getSafeAxiosLogDetails(error));
     return false;
   }
 }
@@ -148,17 +219,26 @@ async function addUser(opalUserServiceTarget: string, accessToken: string, addUs
 export async function getUserStateFromUserService(
   opalUserServiceTarget: string,
   accessToken: string,
-  userStateUrl: string,
+  config: OpalUserServiceConfiguration,
 ): Promise<UserStateLookupResult> {
   try {
-    const response = await axios.get<unknown>(`${opalUserServiceTarget}${userStateUrl}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-        'X-New-Login': 'false',
+    const response = await withBoundedRetry<AxiosResponse<unknown>>(
+      () =>
+        axios.get<unknown>(`${opalUserServiceTarget}${config.userStateUrl}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+            'X-New-Login': 'false',
+          },
+          timeout: config.timeoutInMilliseconds,
+          validateStatus: () => true,
+        }),
+      {
+        maxAttempts: config.retryAttempts,
+        delayMs: config.retryDelayInMilliseconds,
+        shouldRetry: (error) => isRetryableAxiosError(error),
       },
-      validateStatus: () => true,
-    });
+    );
 
     return {
       data: response.data,
@@ -166,12 +246,12 @@ export async function getUserStateFromUserService(
     };
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      logger.error('Axios error without response when retrieving user state', {
-        message: error.message,
-        code: error.code,
-      });
+      logger.error(
+        'Retry exhausted when retrieving user state from opal-user-service',
+        getSafeRetryLogDetails(error, config),
+      );
     } else {
-      logger.error('Unexpected error when retrieving user state', error);
+      logger.error('Unexpected error when retrieving user state', getSafeAxiosLogDetails(error));
     }
 
     return {
@@ -193,7 +273,7 @@ export async function getUserStateFromUserService(
 async function updateUser(
   opalUserServiceTarget: string,
   accessToken: string,
-  updateUserUrl: string,
+  config: OpalUserServiceConfiguration,
   userId: string,
   version: string,
 ): Promise<boolean> {
@@ -204,22 +284,18 @@ async function updateUser(
       'If-Match': version,
     };
 
-    const response = await axios.put(`${opalUserServiceTarget}${updateUserUrl}/${userId}`, {}, { headers });
+    const response = await axios.put(
+      `${opalUserServiceTarget}${config.updateUserUrl}/${userId}`,
+      {},
+      {
+        headers,
+        timeout: config.timeoutInMilliseconds,
+      },
+    );
 
     return response.status === 200;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      logger.error('updateUser axios error', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url,
-        method: error.config?.method,
-        message: error.message,
-      });
-    } else {
-      logger.error('updateUser non-axios error', { error: String(error) });
-    }
+  } catch (error: unknown) {
+    logger.error('Error updating user', getSafeAxiosLogDetails(error));
     return false;
   }
 }
@@ -236,7 +312,7 @@ export async function handleCheckUser(
   config: OpalUserServiceConfiguration,
   options?: HandleCheckUserOptions,
 ): Promise<boolean> {
-  const userResult = await checkUserExists(opalUserServiceTarget, accessToken, config.userStateUrl, options);
+  const userResult = await checkUserExists(opalUserServiceTarget, accessToken, config, options);
 
   switch (userResult.status) {
     case 200:
@@ -245,7 +321,7 @@ export async function handleCheckUser(
 
     case 404: {
       logger.info('User not found, attempting to add user');
-      const addResult = await addUser(opalUserServiceTarget, accessToken, config.addUserUrl);
+      const addResult = await addUser(opalUserServiceTarget, accessToken, config);
       if (addResult) {
         logger.info('User successfully added');
         return true;
@@ -270,7 +346,7 @@ export async function handleCheckUser(
       const updateResult = await updateUser(
         opalUserServiceTarget,
         accessToken,
-        config.updateUserUrl,
+        config,
         userResult.user_id,
         userResult.version,
       );

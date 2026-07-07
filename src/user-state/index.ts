@@ -96,11 +96,7 @@ export async function getUserState({
       break;
   }
 
-  const userStateResponse = await getUserStateFromUserService(
-    opalUserServiceUrl,
-    accessToken,
-    opalUserServiceConfig.userStateUrl,
-  );
+  const userStateResponse = await getUserStateFromUserService(opalUserServiceUrl, accessToken, opalUserServiceConfig);
 
   if (isSuccessfulResponse(userStateResponse.status)) {
     logger.info('opal-user-service returned successful response for user state, reading repopulated cache', {
