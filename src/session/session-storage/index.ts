@@ -10,13 +10,15 @@ import { REDIS_CLIENT_APP_LOCAL_KEY } from '../../constants/redis-client-app-loc
 
 const FileStore = FileStoreFactory(session);
 const logger = Logger.getLogger('session-storage');
+const MAX_REDIS_RECONNECT_ATTEMPTS = 20;
+const REDIS_TLS_PROTOCOL = 'rediss:';
 
 type RedisSessionClient = RedisClientType | RedisClusterType;
 
 export default class SessionStorage {
   private getReconnectStrategy() {
     return function (retries: number) {
-      if (retries > 20) {
+      if (retries > MAX_REDIS_RECONNECT_ATTEMPTS) {
         logger.log('Too many attempts to reconnect. Redis connection was terminated');
         return new Error('Too many retries.');
       } else {
@@ -43,7 +45,7 @@ export default class SessionStorage {
         ...(redisUrl.username ? { username: decodeURIComponent(redisUrl.username) } : {}),
         ...(redisUrl.password ? { password: decodeURIComponent(redisUrl.password) } : {}),
         socket: {
-          tls: redisUrl.protocol === 'rediss:',
+          tls: redisUrl.protocol === REDIS_TLS_PROTOCOL,
           reconnectStrategy: this.getReconnectStrategy(),
         },
       },
