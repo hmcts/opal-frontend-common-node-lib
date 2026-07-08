@@ -7,6 +7,7 @@ class SessionStorageConfiguration {
   domain!: string;
   redisEnabled!: boolean;
   redisConnectionString!: string;
+  redisClusterEnabled?: boolean;
 }
 
 export default SessionStorageConfiguration;
