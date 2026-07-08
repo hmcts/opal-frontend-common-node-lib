@@ -21,6 +21,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Remove the obsolete generic `opalApiUrl` proxy configuration from `ProxyConfiguration` and default proxy
   config.
 - Clear the logged-in user's Redis-backed user-state cache entry during SSO logout.
+- Support a cluster-aware Redis session client for managed Redis deployments while retaining standalone Redis by default.
 
 ## Changelog Policy
 
