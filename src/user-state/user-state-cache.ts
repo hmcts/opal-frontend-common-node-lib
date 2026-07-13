@@ -18,7 +18,7 @@ export interface UserStateCacheLookupOptions {
 }
 
 export type UserStateCacheLookupResult =
-  | { status: 'hit'; cacheKey: string; userState: CachedJsonObject }
+  | { status: 'hit'; cacheKey: string; userState: CachedJsonObject; ttlMilliseconds?: number }
   | { status: 'miss'; cacheKey: string }
   | { status: 'invalid-token' }
   | { status: 'cache-error'; error: RedisCacheError };
@@ -60,7 +60,15 @@ export async function getCachedUserStateForAccessToken({
     const cachedUserState = await redisService.getCachedJsonObject(app, cacheKey);
     const matchingUserState = getMatchingUserState(cachedUserState, cacheKey);
 
-    return matchingUserState ? { status: 'hit', cacheKey, userState: matchingUserState } : { status: 'miss', cacheKey };
+    if (!matchingUserState) {
+      return { status: 'miss', cacheKey };
+    }
+
+    const ttlMilliseconds = await redisService.getCacheTtlInMilliseconds(app, cacheKey);
+
+    return ttlMilliseconds === null
+      ? { status: 'hit', cacheKey, userState: matchingUserState }
+      : { status: 'hit', cacheKey, userState: matchingUserState, ttlMilliseconds };
   } catch (error: unknown) {
     if (!isRedisCacheError(error)) {
       throw error;

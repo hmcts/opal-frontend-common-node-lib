@@ -5,9 +5,18 @@ import type UserStateConfiguration from '../interfaces/user-state-config.js';
 import { getUserStateFromUserService } from '../services/opal-user-service.js';
 import RedisService from '../services/redis-service.js';
 import { Jwt } from '../utils/index.js';
-import { getCachedUserStateForAccessToken, USER_STATE_CACHE_FAILURE_MESSAGE } from './user-state-cache.js';
+import {
+  getCachedUserStateForAccessToken,
+  USER_STATE_CACHE_FAILURE_MESSAGE,
+  type UserStateCacheLookupResult,
+} from './user-state-cache.js';
 
 const logger = Logger.getLogger('user-state');
+const CACHE_CONTROL_HEADER = 'Cache-Control';
+const USER_STATE_CACHE_CONTROL_VALUE = 'no-store, must-revalidate';
+const USER_STATE_CACHE_TTL_HEADER = 'X-OPAL-User-State-Cache-TTL-Ms';
+const USER_STATE_CACHE_SOURCE_HEADER = 'X-OPAL-User-State-Cache-Source';
+type UserStateCacheSource = 'redis-hit' | 'redis-repopulated';
 
 export interface UserStateHandlerOptions {
   app: Application;
@@ -40,6 +49,18 @@ function sendCacheFailureResponse(res: Response): void {
   res.status(503).send({ message: USER_STATE_CACHE_FAILURE_MESSAGE });
 }
 
+function setUserStateCacheHeaders(
+  res: Response,
+  cachedUserState: Extract<UserStateCacheLookupResult, { status: 'hit' }>,
+  source: UserStateCacheSource,
+): void {
+  res.header(USER_STATE_CACHE_SOURCE_HEADER, source);
+
+  if (cachedUserState.ttlMilliseconds !== undefined) {
+    res.header(USER_STATE_CACHE_TTL_HEADER, String(cachedUserState.ttlMilliseconds));
+  }
+}
+
 /**
  * Handles a user-state route request.
  *
@@ -58,7 +79,7 @@ export async function getUserState({
 }: UserStateHandlerOptions): Promise<void> {
   const redisService = configuredRedisService ?? new RedisService();
 
-  res.header('Cache-Control', 'no-store, must-revalidate');
+  res.header(CACHE_CONTROL_HEADER, USER_STATE_CACHE_CONTROL_VALUE);
 
   const accessToken = getAccessToken(req);
 
@@ -78,6 +99,7 @@ export async function getUserState({
   switch (cachedUserState.status) {
     case 'hit':
       logger.info('User state cache hit');
+      setUserStateCacheHeaders(res, cachedUserState, 'redis-hit');
       res.status(200).json(cachedUserState.userState);
       return;
 
@@ -112,6 +134,7 @@ export async function getUserState({
     switch (repopulatedUserState.status) {
       case 'hit':
         logger.info('Repopulated user state cache hit');
+        setUserStateCacheHeaders(res, repopulatedUserState, 'redis-repopulated');
         res.status(200).json(repopulatedUserState.userState);
         return;
 
