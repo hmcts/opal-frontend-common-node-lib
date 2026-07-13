@@ -14,6 +14,7 @@ export interface UserStateCacheLookupOptions {
   accessToken: string;
   app: Application;
   redisService?: RedisService;
+  includeTtlMilliseconds?: boolean;
   userStateConfiguration: UserStateConfiguration;
 }
 
@@ -42,6 +43,7 @@ function getMatchingUserState(cachedUserState: CachedJsonObject | null, cacheKey
 export async function getCachedUserStateForAccessToken({
   accessToken,
   app,
+  includeTtlMilliseconds = false,
   redisService: configuredRedisService,
   userStateConfiguration,
 }: UserStateCacheLookupOptions): Promise<UserStateCacheLookupResult> {
@@ -64,7 +66,21 @@ export async function getCachedUserStateForAccessToken({
       return { status: 'miss', cacheKey };
     }
 
-    const ttlMilliseconds = await redisService.getCacheTtlInMilliseconds(app, cacheKey);
+    if (!includeTtlMilliseconds) {
+      return { status: 'hit', cacheKey, userState: matchingUserState };
+    }
+
+    let ttlMilliseconds: number | null;
+
+    try {
+      ttlMilliseconds = await redisService.getCacheTtlInMilliseconds(app, cacheKey);
+    } catch (error: unknown) {
+      if (!isRedisCacheError(error)) {
+        throw error;
+      }
+
+      ttlMilliseconds = null;
+    }
 
     return ttlMilliseconds === null
       ? { status: 'hit', cacheKey, userState: matchingUserState }

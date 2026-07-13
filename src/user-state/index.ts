@@ -92,6 +92,7 @@ export async function getUserState({
   const cachedUserState = await getCachedUserStateForAccessToken({
     accessToken,
     app,
+    includeTtlMilliseconds: true,
     redisService,
     userStateConfiguration,
   });
@@ -127,6 +128,7 @@ export async function getUserState({
     const repopulatedUserState = await getCachedUserStateForAccessToken({
       accessToken,
       app,
+      includeTtlMilliseconds: true,
       redisService,
       userStateConfiguration,
     });
