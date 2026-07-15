@@ -6,6 +6,7 @@ import { decodeObject } from '../utils/base64.js';
 export interface RedisClient {
   get(key: string): Promise<string | null>;
   del?: (key: string) => Promise<number>;
+  pTTL?: (key: string) => Promise<number>;
 }
 
 interface JwtPayload {
@@ -157,6 +158,37 @@ export default class RedisService {
     }
 
     return cachedJsonObject;
+  }
+
+  /**
+   * Reads the remaining Redis TTL for a cache entry in milliseconds.
+   *
+   * Redis returns -1 when the key has no expiry and -2 when the key does not exist. Those values, zero, and clients
+   * without pTTL support are treated as absent TTLs.
+   *
+   * @param app - Express application that may hold the Redis client on `locals`.
+   * @param cacheKey - Redis key for the cached payload.
+   * @returns The positive TTL in milliseconds, or `null` when no positive TTL is available.
+   * @throws RedisCacheError when Redis cannot be read as the source of truth.
+   */
+  public async getCacheTtlInMilliseconds(app: Application, cacheKey: string): Promise<number | null> {
+    const redisClient = this.getRedisClient(app);
+
+    if (!redisClient) {
+      throw new RedisClientUnavailableError();
+    }
+
+    if (typeof redisClient.pTTL !== 'function') {
+      return null;
+    }
+
+    try {
+      const ttlMilliseconds = await redisClient.pTTL(cacheKey);
+
+      return ttlMilliseconds > 0 ? ttlMilliseconds : null;
+    } catch (error: unknown) {
+      throw new RedisCacheReadError({ cause: error });
+    }
   }
 
   /**
