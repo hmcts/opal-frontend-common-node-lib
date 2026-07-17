@@ -44,10 +44,7 @@ export class RedisCacheParseError extends Error {
 }
 
 export type RedisCacheError =
-  | RedisClientUnavailableError
-  | RedisCacheReadError
-  | RedisCacheDeleteError
-  | RedisCacheParseError;
+  RedisClientUnavailableError | RedisCacheReadError | RedisCacheDeleteError | RedisCacheParseError;
 
 export default class RedisService {
   /**
