@@ -3,15 +3,21 @@ import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middlewar
 import { Logger } from '@hmcts/nodejs-logging';
 
 const logger = Logger.getLogger('opalApiProxy');
+import { DEFAULT_PROXY_CONFIG } from '../../constants/default-proxy-config.js';
 import { rawJson, verifyContentDigest } from '../middlewares/digest-verify.middleware.js';
 import { verifyResponseDigest } from '../utils/response-digest.js';
 
 /**
  * Creates an Express router that validates request digests and proxies requests to the Opal API.
  * @param opalApiTarget Upstream Opal API base URL.
+ * @param timeoutInMilliseconds Maximum time to wait for the upstream proxy request before timing out.
  * @returns Configured Express router ready to mount in the host app.
  */
-const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
+const opalApiProxy = (
+  opalApiTarget: string,
+  logEnabled: boolean,
+  timeoutInMilliseconds = DEFAULT_PROXY_CONFIG.timeoutInMilliseconds,
+) => {
   const router = Router();
 
   router.use(rawJson());
@@ -24,6 +30,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean) => {
   const proxy = createProxyMiddleware({
     target: opalApiTarget,
     changeOrigin: true,
+    proxyTimeout: timeoutInMilliseconds,
     selfHandleResponse: true,
     on: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
