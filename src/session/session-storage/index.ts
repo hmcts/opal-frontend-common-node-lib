@@ -4,68 +4,34 @@ import { RedisStore } from 'connect-redis';
 import cookieParser from 'cookie-parser';
 import { Application } from 'express';
 import session from 'express-session';
-import { createClient, createCluster, type RedisClientType, type RedisClusterType } from 'redis';
+import { createClient } from 'redis';
 import FileStoreFactory from 'session-file-store';
 import { REDIS_CLIENT_APP_LOCAL_KEY } from '../../constants/redis-client-app-local-key.js';
 
 const FileStore = FileStoreFactory(session);
 const logger = Logger.getLogger('session-storage');
-const MAX_REDIS_RECONNECT_ATTEMPTS = 20;
-const REDIS_TLS_PROTOCOL = 'rediss:';
-
-type RedisSessionClient = RedisClientType | RedisClusterType;
 
 export default class SessionStorage {
-  private getReconnectStrategy() {
-    return function (retries: number) {
-      if (retries > MAX_REDIS_RECONNECT_ATTEMPTS) {
-        logger.log('Too many attempts to reconnect. Redis connection was terminated');
-        return new Error('Too many retries.');
-      } else {
-        return retries * 500;
-      }
-    };
-  }
-
-  private createRedisClient(connectionString: string, clusterEnabled: boolean): RedisSessionClient {
-    if (!clusterEnabled) {
-      return createClient({
-        url: connectionString,
-        socket: {
-          reconnectStrategy: this.getReconnectStrategy(),
-        },
-      });
-    }
-
-    const redisUrl = new URL(connectionString);
-
-    return createCluster({
-      rootNodes: [{ url: connectionString }],
-      defaults: {
-        ...(redisUrl.username ? { username: decodeURIComponent(redisUrl.username) } : {}),
-        ...(redisUrl.password ? { password: decodeURIComponent(redisUrl.password) } : {}),
-        socket: {
-          tls: redisUrl.protocol === REDIS_TLS_PROTOCOL,
-          reconnectStrategy: this.getReconnectStrategy(),
-        },
-      },
-    });
-  }
-
-  private getStore(app: Application, enabled: boolean, connectionString: string, clusterEnabled: boolean) {
+  private getStore(app: Application, enabled: boolean, connectionString: string) {
     if (enabled) {
       const redisUrl = new URL(connectionString);
-      logger.info(
-        `Using ${clusterEnabled ? 'clustered' : 'standalone'} Redis session store`,
-        `${redisUrl.protocol}//${redisUrl.host}`,
-      );
-      const client = this.createRedisClient(connectionString, clusterEnabled);
+      logger.info('Using Redis session store', `${redisUrl.protocol}//${redisUrl.host}`);
+      const client = createClient({
+        url: connectionString,
+        socket: {
+          reconnectStrategy: function (retries) {
+            if (retries > 20) {
+              logger.log('Too many attempts to reconnect. Redis connection was terminated');
+              return new Error('Too many retries.');
+            } else {
+              return retries * 500;
+            }
+          },
+        },
+      });
 
       client.on('error', (err) => {
         logger.error('Redis Client Error', err);
-      });
-      client.on('node-error', (err) => {
-        logger.error('Redis Cluster Node Error', err);
       });
 
       client.connect().catch(() => {
@@ -96,12 +62,7 @@ export default class SessionStorage {
           domain: sessionStorage.domain,
         },
         rolling: true,
-        store: this.getStore(
-          app,
-          sessionStorage.redisEnabled,
-          sessionStorage.redisConnectionString,
-          sessionStorage.redisClusterEnabled === true,
-        ),
+        store: this.getStore(app, sessionStorage.redisEnabled, sessionStorage.redisConnectionString),
       }),
     );
   }
