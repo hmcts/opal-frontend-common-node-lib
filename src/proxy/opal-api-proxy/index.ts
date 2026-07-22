@@ -106,25 +106,25 @@ const opalApiProxy = (
       error: (error, _req, res) => {
         // Do not replay the request here: only the frontend knows whether it is safe to retry.
         if (isRetryableProxyError(error)) {
-          logger.warn('Proxy timeout or transport failure when calling upstream service', {
+          logger.warn('Proxy timeout or transport failure when calling opal-fines-service', {
             message: error.message,
             code: (error as Error & { code?: string }).code,
           });
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(504, 'Gateway Timeout', 'The upstream service did not respond in time.', true),
+            createProxyErrorResponse(504, 'Gateway Timeout', 'The opal-fines-service did not respond in time.', true),
           );
           return;
         }
 
         // Keep other proxy failures deterministic without telling the frontend to retry them.
-        logger.error('Unexpected proxy failure when calling upstream service', {
+        logger.error('Unexpected proxy failure when calling opal-fines-service', {
           message: error instanceof Error ? error.message : String(error),
           code: error instanceof Error ? (error as Error & { code?: string }).code : undefined,
         });
         sendProxyErrorResponse(
           res,
-          createProxyErrorResponse(502, 'Bad Gateway', 'The upstream service could not be reached.', false),
+          createProxyErrorResponse(502, 'Bad Gateway', 'The opal-fines-service could not be reached.', false),
         );
       },
     },
