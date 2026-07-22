@@ -1,11 +1,55 @@
 import { Router } from 'express';
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 import { Logger } from '@hmcts/nodejs-logging';
+import { Socket } from 'node:net';
+import type { ServerResponse } from 'node:http';
 
 const logger = Logger.getLogger('opalApiProxy');
 import { DEFAULT_PROXY_CONFIG } from '../../constants/default-proxy-config.js';
 import { rawJson, verifyContentDigest } from '../middlewares/digest-verify.middleware.js';
 import { verifyResponseDigest } from '../utils/response-digest.js';
+
+type ProxyErrorResponse = {
+  title: string;
+  status: number;
+  detail: string;
+  retriable: boolean;
+};
+
+const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT']);
+
+function isServerResponse(res: ServerResponse | Socket): res is ServerResponse {
+  return !(res instanceof Socket);
+}
+
+function isRetryableProxyError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = (error as Error & { code?: unknown }).code;
+  return typeof code === 'string' && RETRYABLE_PROXY_ERROR_CODES.has(code);
+}
+
+function createProxyErrorResponse(
+  status: number,
+  title: string,
+  detail: string,
+  retriable: boolean,
+): ProxyErrorResponse {
+  return { title, status, detail, retriable };
+}
+
+function sendProxyErrorResponse(res: ServerResponse | Socket, body: ProxyErrorResponse): void {
+  if (!isServerResponse(res) || res.headersSent || res.writableEnded) {
+    return;
+  }
+
+  res.statusCode = body.status;
+  res.setHeader('Content-Type', 'application/problem+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify(body));
+}
 
 /**
  * Creates an Express router that validates request digests and proxies requests to the Opal API.
@@ -58,6 +102,30 @@ const opalApiProxy = (
       },
       proxyRes: (proxyRes, req, res) => {
         void handleProxyResponse(proxyRes, req, res);
+      },
+      error: (error, _req, res) => {
+        // Do not replay the request here: only the frontend knows whether it is safe to retry.
+        if (isRetryableProxyError(error)) {
+          logger.warn('Proxy timeout or transport failure when calling upstream service', {
+            message: error.message,
+            code: (error as Error & { code?: string }).code,
+          });
+          sendProxyErrorResponse(
+            res,
+            createProxyErrorResponse(504, 'Gateway Timeout', 'The upstream service did not respond in time.', true),
+          );
+          return;
+        }
+
+        // Keep other proxy failures deterministic without telling the frontend to retry them.
+        logger.error('Unexpected proxy failure when calling upstream service', {
+          message: error instanceof Error ? error.message : String(error),
+          code: error instanceof Error ? (error as Error & { code?: string }).code : undefined,
+        });
+        sendProxyErrorResponse(
+          res,
+          createProxyErrorResponse(502, 'Bad Gateway', 'The upstream service could not be reached.', false),
+        );
       },
     },
   });
