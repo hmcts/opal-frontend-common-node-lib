@@ -1,6 +1,6 @@
 # Opal API Proxy Timeout and Retry Contract
 
-`OpalApiProxy` forwards requests from an opal-frontend node server to the opal-fines-service.
+`OpalApiProxy` forwards requests from an opal-frontend node server to an upstream API service.
 It applies a timeout to the upstream connection, but it never retries a request.
 Only the consuming opal-frontend can decide whether replaying its original request is
 safe.
@@ -8,8 +8,8 @@ safe.
 ## Timeout configuration
 
 Pass the timeout, in milliseconds, as the third argument when creating the
-proxy. If it is omitted, the proxy uses
-`DEFAULT_PROXY_CONFIG.timeoutInMilliseconds`, which is `30000` milliseconds.
+proxy. The consuming application owns this value so it can be configured per
+environment.
 
 ```ts
 opalApiProxy(
@@ -21,14 +21,14 @@ opalApiProxy(
 
 ## Error responses
 
-When the opal-fines-service times out or the proxy encounters a recognised
+When the upstream service times out or the proxy encounters a recognised
 transport failure, the proxy returns the following response:
 
 ```json
 {
   "title": "Gateway Timeout",
   "status": 504,
-  "detail": "The opal-fines-service did not respond in time.",
+  "detail": "The upstream service did not respond in time.",
   "retriable": true
 }
 ```
