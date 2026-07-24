@@ -64,9 +64,9 @@ function sendProxyErrorResponse(res: ServerResponse | Socket, body: ProxyErrorRe
 
 /**
  * Creates an Express router that validates request digests and proxies requests to the Opal API.
- * @param opalApiTarget Upstream Opal API base URL.
- * @param logEnabled Whether to log the client IP address added to the upstream request.
- * @param timeoutInMilliseconds Maximum time to wait for the upstream proxy request before timing out.
+ * @param opalApiTarget Backend Opal API base URL.
+ * @param logEnabled Whether to log the client IP address added to the backend request.
+ * @param timeoutInMilliseconds Maximum time to wait for the backend proxy request before timing out.
  * This is intentionally required so the consuming app owns environment-specific timeout configuration.
  * @returns Configured Express router that maps proxy timeout and transport failures without replaying requests.
  */
@@ -122,7 +122,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
           });
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(504, 'Gateway Timeout', 'The upstream service did not respond in time.', true),
+            createProxyErrorResponse(504, 'Gateway Timeout', 'The backend service did not respond in time.', true),
           );
           return;
         }
@@ -135,7 +135,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         });
         sendProxyErrorResponse(
           res,
-          createProxyErrorResponse(502, 'Bad Gateway', 'The upstream service could not be reached.', false),
+          createProxyErrorResponse(502, 'Bad Gateway', 'The backend service could not be reached.', false),
         );
       },
     },
