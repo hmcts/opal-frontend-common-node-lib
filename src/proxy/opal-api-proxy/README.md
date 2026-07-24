@@ -7,16 +7,31 @@ safe.
 
 ## Timeout configuration
 
+`DEFAULT_PROXY_CONFIG.timeoutInMilliseconds` is intentionally `null`. The common node library does not own an
+environment-specific proxy timeout value.
+
 Pass the timeout, in milliseconds, as the third argument when creating the
 proxy. The consuming application owns this value so it can be configured per
 environment.
 
 ```ts
-opalApiProxy(
-  process.env.OPAL_FINES_SERVICE_URL,
-  false,
-  30000,
-);
+const proxyConfiguration: ProxyConfiguration = {
+  ...DEFAULT_PROXY_CONFIG,
+  opalFinesServiceUrl: config.get('opal-api.opal-fines-service'),
+  opalUserServiceUrl: config.get('opal-api.opal-user-service'),
+  timeoutInMilliseconds: config.get('opal-api.timeoutInMilliseconds'),
+};
+
+if (proxyConfiguration.timeoutInMilliseconds === null) {
+  throw new Error('Missing opal-api.timeoutInMilliseconds configuration.');
+}
+
+if (proxyConfiguration.opalFinesServiceUrl) {
+  app.use(
+    '/opal-fines-service',
+    OpalApiProxy(proxyConfiguration.opalFinesServiceUrl, ipLoggingEnabled, proxyConfiguration.timeoutInMilliseconds),
+  );
+}
 ```
 
 ## Error responses

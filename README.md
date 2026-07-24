@@ -175,37 +175,6 @@ import {
 
 Refer to the `exports` block in `package.json` for the full list of available modules.
 
-## API Proxy Timeout Configuration
-
-`DEFAULT_PROXY_CONFIG.timeoutInMilliseconds` is intentionally `null`. The common node library does not own an
-environment-specific proxy timeout value.
-
-Consuming applications must provide a positive timeout value, in milliseconds, before wiring `OpalApiProxy`.
-The proxy factory requires a `number` so a consumer cannot intentionally create the proxy with a missing timeout.
-
-```ts
-const proxyConfiguration: ProxyConfiguration = {
-  ...DEFAULT_PROXY_CONFIG,
-  opalFinesServiceUrl: config.get('opal-api.opal-fines-service'),
-  opalUserServiceUrl: config.get('opal-api.opal-user-service'),
-  timeoutInMilliseconds: config.get('opal-api.timeoutInMilliseconds'),
-};
-
-if (proxyConfiguration.timeoutInMilliseconds === null) {
-  throw new Error('Missing opal-api.timeoutInMilliseconds configuration.');
-}
-
-if (proxyConfiguration.opalFinesServiceUrl) {
-  app.use(
-    '/opal-fines-service',
-    OpalApiProxy(proxyConfiguration.opalFinesServiceUrl, ipLoggingEnabled, proxyConfiguration.timeoutInMilliseconds),
-  );
-}
-```
-
-The proxy maps timeout and recognised transport failures to deterministic error responses, but it never retries
-requests. Frontend retry behaviour remains opt-in at the request level.
-
 ## Commonly Used Commands
 
 The following commands are available in the `package.json`:
