@@ -115,7 +115,8 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
       error: (error, _req, res) => {
         // Do not replay the request here: only the frontend knows whether it is safe to retry.
         if (isRetryableProxyError(error)) {
-          logger.warn('Proxy timeout or transport failure when calling upstream service', {
+          logger.warn(`Proxy timeout or transport failure when calling ${opalApiTarget}`, {
+            target: opalApiTarget,
             message: error.message,
             code: (error as Error & { code?: string }).code,
           });
@@ -127,7 +128,8 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         }
 
         // Keep other proxy failures deterministic without telling the frontend to retry them.
-        logger.error('Unexpected proxy failure when calling upstream service', {
+        logger.error(`Unexpected proxy failure when calling ${opalApiTarget}`, {
+          target: opalApiTarget,
           message: error instanceof Error ? error.message : String(error),
           code: error instanceof Error ? (error as Error & { code?: string }).code : undefined,
         });
