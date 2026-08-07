@@ -1,7 +1,7 @@
 {
   "name": "@hmcts/opal-frontend-common-node",
   "type": "module",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "license": "MIT",
   "description": "Common nodejs library components for opal",
   "engines": {
@@ -99,6 +99,7 @@
     "check:exports": "node scripts/validate-export-targets.cjs",
     "check:pack-shape": "node scripts/validate-pack-shape.cjs",
     "check:exports:esm": "node scripts/smoke-test-exports.mjs",
+    "test": "yarn build && LOG_LEVEL=OFF node --test test/proxy/*.test.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",
