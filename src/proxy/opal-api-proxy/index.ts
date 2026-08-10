@@ -111,15 +111,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Identifies upstream OPAL problem responses that should pass through without rewriting.
+ * Identifies upstream OPAL problem responses that can either pass through or receive an operation id.
  */
-function isOpalProblemBody(value: unknown): boolean {
+function isOpalProblemBody(value: unknown): value is Record<string, unknown> {
   return (
     isRecord(value) &&
     typeof value['title'] === 'string' &&
     typeof value['status'] === 'number' &&
     typeof value['detail'] === 'string'
   );
+}
+
+/**
+ * Checks whether an upstream OPAL problem response already contains a usable operation id.
+ */
+function hasOperationId(value: Record<string, unknown>): boolean {
+  return typeof value['operation_id'] === 'string' && value['operation_id'].trim().length > 0;
 }
 
 /**
@@ -195,8 +202,28 @@ function getElapsedMs(req: ProxyRequest): number {
 }
 
 /**
+ * Injects a resolved operation id into a legacy upstream OPAL problem response and fixes response headers.
+ */
+function injectOperationId(
+  body: Record<string, unknown>,
+  req: ProxyRequest,
+  res: ServerResponse,
+  statusCode: number,
+): Buffer {
+  const response = Buffer.from(JSON.stringify({ ...body, operation_id: resolveOperationId(req) }), 'utf8');
+
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Length', response.length.toString());
+  res.removeHeader('Content-Digest');
+
+  return response;
+}
+
+/**
  * Rewrites upstream gateway errors with non-OPAL bodies into the OPAL proxy error contract.
- * Existing OPAL problem responses pass through after response digest verification.
+ * Existing OPAL problem responses pass through only when they already include an operation id.
  */
 function normaliseGatewayResponse(
   responseBuffer: Buffer,
@@ -209,8 +236,12 @@ function normaliseGatewayResponse(
     return verifyResponseDigest(responseBuffer, proxyRes, res);
   }
 
-  if (isOpalProblemBody(parseJsonBuffer(responseBuffer))) {
-    return verifyResponseDigest(responseBuffer, proxyRes, res);
+  const parsedResponse = parseJsonBuffer(responseBuffer);
+  if (isOpalProblemBody(parsedResponse)) {
+    if (hasOperationId(parsedResponse)) {
+      return verifyResponseDigest(responseBuffer, proxyRes, res);
+    }
+    return injectOperationId(parsedResponse, req, res, statusCode);
   }
 
   const operationId = resolveOperationId(req);

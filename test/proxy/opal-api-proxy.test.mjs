@@ -206,6 +206,69 @@ test('existing OPAL error response is preserved', async () => {
   assert.equal(response.body, body);
 });
 
+test('legacy OPAL error response without operation id is given one', async () => {
+  const body = JSON.stringify({
+    title: 'Gateway Timeout',
+    status: 504,
+    detail: 'Upstream OPAL timeout',
+    retriable: true,
+  });
+  const upstream = await listen((_req, res) => {
+    res.writeHead(504, {
+      'Content-Type': 'application/problem+json; charset=utf-8',
+      'Content-Digest': sha512ContentDigest(body),
+    });
+    res.end(body);
+  });
+  const proxy = await createProxyServer(upstream.url);
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+    traceparent: `00-${traceId}-${spanId}-01`,
+  });
+
+  assert.equal(response.statusCode, 504);
+  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.equal(response.headers['content-digest'], undefined);
+  assert.deepEqual(JSON.parse(response.body), {
+    title: 'Gateway Timeout',
+    status: 504,
+    detail: 'Upstream OPAL timeout',
+    retriable: true,
+    operation_id: traceId,
+  });
+});
+
+test('legacy OPAL error response with blank operation id is given one', async () => {
+  const body = JSON.stringify({
+    title: 'Gateway Timeout',
+    status: 504,
+    detail: 'Upstream OPAL timeout',
+    retriable: true,
+    operation_id: '   ',
+  });
+  const upstream = await listen((_req, res) => {
+    res.writeHead(504, {
+      'Content-Type': 'application/problem+json; charset=utf-8',
+    });
+    res.end(body);
+  });
+  const proxy = await createProxyServer(upstream.url);
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+    traceparent: `00-${traceId}-${spanId}-01`,
+  });
+
+  assert.equal(response.statusCode, 504);
+  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.deepEqual(JSON.parse(response.body), {
+    title: 'Gateway Timeout',
+    status: 504,
+    detail: 'Upstream OPAL timeout',
+    retriable: true,
+    operation_id: traceId,
+  });
+});
+
 test('safe logging messages and metadata include operation id and exclude sensitive data', () => {
   const warnMessage = 'Proxy timeout or transport failure';
   const errorMessage = 'Unexpected proxy failure';
