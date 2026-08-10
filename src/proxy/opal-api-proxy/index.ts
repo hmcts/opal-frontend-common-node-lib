@@ -27,11 +27,11 @@ type ProxyRequest = IncomingMessage & {
   };
 };
 
-const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT']);
 const NORMALISED_GATEWAY_STATUSES = new Set([502, 503, 504]);
 const OPAL_PROXY_ERROR_TITLE = 'There was a problem';
 const OPAL_PROXY_ERROR_DETAIL = 'You can try again. If the problem persists, contact the service desk.';
 const proxyStartTimes = new WeakMap<ProxyRequest, number>();
+const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT']);
 
 /**
  * Narrows the proxy error response target to an HTTP response before writing to it.
