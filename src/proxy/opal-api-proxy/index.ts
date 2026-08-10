@@ -305,7 +305,13 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
           );
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(504, 'Gateway Timeout', 'The backend service did not respond in time.', true, operationId),
+            createProxyErrorResponse(
+              504,
+              'Gateway Timeout',
+              'The backend service did not respond in time.',
+              true,
+              operationId,
+            ),
           );
           return;
         }
