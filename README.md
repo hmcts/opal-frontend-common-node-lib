@@ -191,6 +191,9 @@ The following commands are available in the `package.json`:
 - `yarn lint`  
   Runs ESLint across the `src/` directory and checks formatting using Prettier.
 
+- `yarn test`
+  Builds the library and runs the proxy regression tests against the compiled `dist/` output.
+
 - `yarn prettier`  
   Checks if files are formatted correctly.
 
