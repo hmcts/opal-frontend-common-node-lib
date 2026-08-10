@@ -117,7 +117,7 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
   });
 
   assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.match(response.headers['content-type'], /^application\/problem\+json/);
   assert.equal(response.headers['content-length'], Buffer.byteLength(response.body).toString());
   assert.notEqual(response.body, '');
   assert.deepEqual(JSON.parse(response.body), {
@@ -145,7 +145,7 @@ test('gateway HTML 504 is normalised and response digest is removed', async () =
   });
 
   assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.match(response.headers['content-type'], /^application\/problem\+json/);
   assert.equal(response.headers['content-digest'], undefined);
   assert.deepEqual(JSON.parse(response.body), {
     title: 'Gateway Timeout',
@@ -170,7 +170,7 @@ test('gateway HTML 504 completes even when upstream response body never ends', a
   });
 
   assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.match(response.headers['content-type'], /^application\/problem\+json/);
   assert.equal(response.headers['content-length'], Buffer.byteLength(response.body).toString());
   assert.deepEqual(JSON.parse(response.body), {
     title: 'Gateway Timeout',
@@ -227,7 +227,7 @@ test('legacy OPAL error response without operation id is given one', async () =>
   });
 
   assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.match(response.headers['content-type'], /^application\/problem\+json/);
   assert.equal(response.headers['content-digest'], undefined);
   assert.deepEqual(JSON.parse(response.body), {
     title: 'Gateway Timeout',
@@ -259,7 +259,7 @@ test('legacy OPAL error response with blank operation id is given one', async ()
   });
 
   assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/json/);
+  assert.match(response.headers['content-type'], /^application\/problem\+json/);
   assert.deepEqual(JSON.parse(response.body), {
     title: 'Gateway Timeout',
     status: 504,

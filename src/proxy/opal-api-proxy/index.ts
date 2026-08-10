@@ -28,6 +28,7 @@ type ProxyRequest = IncomingMessage & {
 };
 
 const NORMALISED_GATEWAY_STATUSES = new Set([502, 503, 504]);
+const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
 const proxyStartTimes = new WeakMap<ProxyRequest, number>();
 const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT']);
 
@@ -97,7 +98,7 @@ function sendProxyErrorResponse(res: ServerResponse | Socket, body: ProxyErrorRe
   const response = Buffer.from(JSON.stringify(body), 'utf8');
 
   res.statusCode = body.status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Length', response.length.toString());
   res.end(response);
@@ -213,7 +214,7 @@ function injectOperationId(
   const response = Buffer.from(JSON.stringify({ ...body, operation_id: resolveOperationId(req) }), 'utf8');
 
   res.statusCode = statusCode;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Length', response.length.toString());
   res.removeHeader('Content-Digest');
@@ -255,7 +256,7 @@ function normaliseGatewayResponse(
   const normalisedResponse = Buffer.from(JSON.stringify(body), 'utf8');
 
   res.statusCode = statusCode;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Content-Length', normalisedResponse.length.toString());
   res.removeHeader('Content-Digest');
