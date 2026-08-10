@@ -19,7 +19,7 @@ const proxyConfiguration: ProxyConfiguration = {
   ...DEFAULT_PROXY_CONFIG,
   opalFinesServiceUrl: config.get('opal-api.opal-fines-service'),
   opalUserServiceUrl: config.get('opal-api.opal-user-service'),
-  timeoutInMilliseconds: config.get('opal-fines-service.timeoutInMilliseconds'),
+  timeoutInMilliseconds: config.get('opal-api.timeoutInMilliseconds'),
 };
 
 if (proxyConfiguration.timeoutInMilliseconds === null) {
@@ -41,9 +41,9 @@ transport failure, the proxy returns the following response:
 
 ```json
 {
-  "title": "There was a problem",
+  "title": "Gateway Timeout",
   "status": 504,
-  "detail": "You can try again. If the problem persists, contact the service desk.",
+  "detail": "The upstream service did not respond in time.",
   "retriable": true,
   "operation_id": "<operation-id>"
 }
