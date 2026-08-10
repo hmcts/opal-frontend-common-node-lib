@@ -238,6 +238,32 @@ test('legacy OPAL error response without operation id is given one', async () =>
   });
 });
 
+test('legacy OPAL error response with invalid digest is rejected before operation id injection', async () => {
+  const body = JSON.stringify({
+    title: 'Gateway Timeout',
+    status: 504,
+    detail: 'Upstream OPAL timeout',
+    retriable: true,
+  });
+  const upstream = await listen((_req, res) => {
+    res.writeHead(504, {
+      'Content-Type': 'application/problem+json; charset=utf-8',
+      'Content-Digest': sha512ContentDigest(`${body}tampered`),
+    });
+    res.end(body);
+  });
+  const proxy = await createProxyServer(upstream.url);
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+    traceparent: `00-${traceId}-${spanId}-01`,
+  });
+
+  assert.equal(response.statusCode, 502);
+  assert.match(response.headers['content-type'], /^text\/plain/);
+  assert.equal(response.headers['content-digest'], undefined);
+  assert.equal(response.body, 'Upstream Content-Digest verification failed');
+});
+
 test('legacy OPAL error response with blank operation id is given one', async () => {
   const body = JSON.stringify({
     title: 'Gateway Timeout',

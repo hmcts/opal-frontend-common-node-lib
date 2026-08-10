@@ -237,10 +237,15 @@ function normaliseGatewayResponse(
     return verifyResponseDigest(responseBuffer, proxyRes, res);
   }
 
-  const parsedResponse = parseJsonBuffer(responseBuffer);
+  const verifiedResponse = verifyResponseDigest(responseBuffer, proxyRes, res);
+  if (verifiedResponse !== responseBuffer) {
+    return verifiedResponse;
+  }
+
+  const parsedResponse = parseJsonBuffer(verifiedResponse);
   if (isOpalProblemBody(parsedResponse)) {
     if (hasOperationId(parsedResponse)) {
-      return verifyResponseDigest(responseBuffer, proxyRes, res);
+      return verifiedResponse;
     }
     return injectOperationId(parsedResponse, req, res, statusCode);
   }
