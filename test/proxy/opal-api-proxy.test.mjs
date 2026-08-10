@@ -206,7 +206,9 @@ test('existing OPAL error response is preserved', async () => {
   assert.equal(response.body, body);
 });
 
-test('safe logging metadata includes operation id and excludes sensitive data', () => {
+test('safe logging messages and metadata include operation id and exclude sensitive data', () => {
+  const warnMessage = 'Proxy timeout or transport failure';
+  const errorMessage = 'Unexpected proxy failure';
   const metadata = createSafeProxyLogMetadata(
     {
       method: 'POST',
@@ -220,7 +222,7 @@ test('safe logging metadata includes operation id and excludes sensitive data', 
         nationalInsuranceNumber: 'QQ123456C',
       },
     },
-    'https://fines.example.test/service?token=secret',
+    'https://user:password@fines.example.test/service?token=secret',
     traceId,
     504,
     true,
@@ -239,5 +241,8 @@ test('safe logging metadata includes operation id and excludes sensitive data', 
     errorType: 'Error',
     code: 'ETIMEDOUT',
   });
-  assert.doesNotMatch(JSON.stringify(metadata), /secret|Bearer|QQ123456C|accountNumber|socket timeout/);
+  assert.doesNotMatch(
+    JSON.stringify({ warnMessage, errorMessage, metadata }),
+    /secret|Bearer|QQ123456C|accountNumber|socket timeout|token|password|user:/,
+  );
 });

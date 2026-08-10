@@ -321,7 +321,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         const elapsedMs = getElapsedMs(req);
         if (isRetryableProxyError(error)) {
           logger.warn(
-            `Proxy timeout or transport failure when calling ${opalApiTarget}`,
+            'Proxy timeout or transport failure',
             createSafeProxyLogMetadata(req, opalApiTarget, operationId, 504, true, elapsedMs, error),
           );
           sendProxyErrorResponse(
@@ -333,7 +333,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
 
         // Keep other proxy failures deterministic without telling the frontend to retry them.
         logger.error(
-          `Unexpected proxy failure when calling ${opalApiTarget}`,
+          'Unexpected proxy failure',
           createSafeProxyLogMetadata(req, opalApiTarget, operationId, 502, false, elapsedMs, error),
         );
         sendProxyErrorResponse(
