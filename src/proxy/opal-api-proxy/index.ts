@@ -165,6 +165,18 @@ function getErrorType(error: unknown): string {
 }
 
 /**
+ * Resolves the request path for proxy logs without query strings or raw search criteria.
+ */
+function getSafeRequestPath(req: ProxyRequest): string | undefined {
+  const rawPath = req.path || req.url;
+  if (!rawPath) {
+    return undefined;
+  }
+
+  return rawPath.split('?', 1)[0] || undefined;
+}
+
+/**
  * Builds safe proxy failure metadata for logging without request bodies, headers, tokens, or user data.
  */
 function createSafeProxyLogMetadata(
@@ -181,7 +193,7 @@ function createSafeProxyLogMetadata(
   return {
     operationId,
     method: req.method,
-    path: req.path || req.url,
+    path: getSafeRequestPath(req),
     target: target.host,
     statusCode,
     elapsedMs,

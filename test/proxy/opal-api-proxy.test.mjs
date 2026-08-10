@@ -405,3 +405,20 @@ test('safe logging messages and metadata include operation id and exclude sensit
     /secret|Bearer|QQ123456C|accountNumber|socket timeout|token|password|user:/,
   );
 });
+
+test('safe logging metadata strips query criteria when request path is unavailable', () => {
+  const metadata = createSafeProxyLogMetadata(
+    {
+      method: 'POST',
+      url: '/minor-creditors/search?accountNumber=12345&name=Sensitive',
+    },
+    'https://fines.example.test/service',
+    traceId,
+    504,
+    true,
+    123,
+  );
+
+  assert.equal(metadata.path, '/minor-creditors/search');
+  assert.doesNotMatch(JSON.stringify(metadata), /accountNumber|12345|Sensitive/);
+});
