@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import http from 'node:http';
 import { after, test } from 'node:test';
 import express from 'express';
+import { Logger } from '@hmcts/nodejs-logging';
 import opalApiProxy, { createSafeProxyLogMetadata, resolveOperationId } from '../../dist/proxy/opal-api-proxy/index.js';
 
 const servers = [];
@@ -57,6 +58,45 @@ async function createProxyServer(target, timeoutInMilliseconds = 100) {
   app.use('/opal-fines-service', opalApiProxy(target, false, timeoutInMilliseconds));
 
   return listen(app);
+}
+
+function captureProxyWarn() {
+  const logger = Logger.getLogger('opalApiProxy');
+  const originalWarn = logger.warn;
+  const calls = [];
+
+  logger.warn = (...args) => {
+    calls.push(args);
+  };
+
+  return {
+    calls,
+    restore: () => {
+      logger.warn = originalWarn;
+    },
+  };
+}
+
+function assertGatewayFailureLog(warn, expectedMetadata) {
+  assert.equal(warn.calls.length, 1);
+
+  const [message, metadata] = warn.calls[0];
+  assert.equal(message, 'Proxy gateway failure response');
+  assert.deepEqual(
+    {
+      operationId: metadata.operationId,
+      method: metadata.method,
+      path: metadata.path,
+      target: metadata.target,
+      statusCode: metadata.statusCode,
+      retriable: metadata.retriable,
+      errorType: metadata.errorType,
+      code: metadata.code,
+    },
+    expectedMetadata,
+  );
+  assert.equal(typeof metadata.elapsedMs, 'number');
+  assert.ok(metadata.elapsedMs >= 0);
 }
 
 after(async () => {
@@ -129,7 +169,7 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
   });
 });
 
-test('gateway HTML 504 is normalised and response digest is removed', async () => {
+test('gateway HTML 504 is normalised, logged and response digest is removed', async () => {
   const html = '<html><body>Gateway timeout</body></html>';
   const upstream = await listen((_req, res) => {
     res.writeHead(504, {
@@ -139,21 +179,36 @@ test('gateway HTML 504 is normalised and response digest is removed', async () =
     res.end(html);
   });
   const proxy = await createProxyServer(upstream.url);
+  const warn = captureProxyWarn();
 
-  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
-    traceparent: `00-${traceId}-${spanId}-01`,
-  });
+  try {
+    const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+      traceparent: `00-${traceId}-${spanId}-01`,
+    });
 
-  assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/problem\+json/);
-  assert.equal(response.headers['content-digest'], undefined);
-  assert.deepEqual(JSON.parse(response.body), {
-    title: 'Gateway Timeout',
-    status: 504,
-    detail: 'The backend service did not respond in time.',
-    retriable: true,
-    operation_id: traceId,
-  });
+    assert.equal(response.statusCode, 504);
+    assert.match(response.headers['content-type'], /^application\/problem\+json/);
+    assert.equal(response.headers['content-digest'], undefined);
+    assert.deepEqual(JSON.parse(response.body), {
+      title: 'Gateway Timeout',
+      status: 504,
+      detail: 'The backend service did not respond in time.',
+      retriable: true,
+      operation_id: traceId,
+    });
+    assertGatewayFailureLog(warn, {
+      operationId: traceId,
+      method: 'GET',
+      path: '/minor-creditors',
+      target: new URL(upstream.url).host,
+      statusCode: 504,
+      retriable: true,
+      errorType: undefined,
+      code: undefined,
+    });
+  } finally {
+    warn.restore();
+  }
 });
 
 test('gateway HTML 504 completes even when upstream response body never ends', async () => {
@@ -206,7 +261,7 @@ test('existing OPAL error response is preserved', async () => {
   assert.equal(response.body, body);
 });
 
-test('legacy OPAL error response without operation id is given one', async () => {
+test('legacy OPAL error response without operation id is given one and logged', async () => {
   const body = JSON.stringify({
     title: 'Gateway Timeout',
     status: 504,
@@ -221,21 +276,36 @@ test('legacy OPAL error response without operation id is given one', async () =>
     res.end(body);
   });
   const proxy = await createProxyServer(upstream.url);
+  const warn = captureProxyWarn();
 
-  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
-    traceparent: `00-${traceId}-${spanId}-01`,
-  });
+  try {
+    const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+      traceparent: `00-${traceId}-${spanId}-01`,
+    });
 
-  assert.equal(response.statusCode, 504);
-  assert.match(response.headers['content-type'], /^application\/problem\+json/);
-  assert.equal(response.headers['content-digest'], undefined);
-  assert.deepEqual(JSON.parse(response.body), {
-    title: 'Gateway Timeout',
-    status: 504,
-    detail: 'Upstream OPAL timeout',
-    retriable: true,
-    operation_id: traceId,
-  });
+    assert.equal(response.statusCode, 504);
+    assert.match(response.headers['content-type'], /^application\/problem\+json/);
+    assert.equal(response.headers['content-digest'], undefined);
+    assert.deepEqual(JSON.parse(response.body), {
+      title: 'Gateway Timeout',
+      status: 504,
+      detail: 'Upstream OPAL timeout',
+      retriable: true,
+      operation_id: traceId,
+    });
+    assertGatewayFailureLog(warn, {
+      operationId: traceId,
+      method: 'GET',
+      path: '/minor-creditors',
+      target: new URL(upstream.url).host,
+      statusCode: 504,
+      retriable: true,
+      errorType: undefined,
+      code: undefined,
+    });
+  } finally {
+    warn.restore();
+  }
 });
 
 test('legacy OPAL error response with invalid digest is rejected before operation id injection', async () => {
