@@ -121,9 +121,9 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
   assert.equal(response.headers['content-length'], Buffer.byteLength(response.body).toString());
   assert.notEqual(response.body, '');
   assert.deepEqual(JSON.parse(response.body), {
-    title: 'There was a problem',
+    title: 'Gateway Timeout',
     status: 504,
-    detail: 'You can try again. If the problem persists, contact the service desk.',
+    detail: 'The backend service did not respond in time.',
     retriable: true,
     operation_id: traceId,
   });
@@ -148,9 +148,9 @@ test('gateway HTML 504 is normalised and response digest is removed', async () =
   assert.match(response.headers['content-type'], /^application\/json/);
   assert.equal(response.headers['content-digest'], undefined);
   assert.deepEqual(JSON.parse(response.body), {
-    title: 'There was a problem',
+    title: 'Gateway Timeout',
     status: 504,
-    detail: 'You can try again. If the problem persists, contact the service desk.',
+    detail: 'The backend service did not respond in time.',
     retriable: true,
     operation_id: traceId,
   });
@@ -173,9 +173,9 @@ test('gateway HTML 504 completes even when upstream response body never ends', a
   assert.match(response.headers['content-type'], /^application\/json/);
   assert.equal(response.headers['content-length'], Buffer.byteLength(response.body).toString());
   assert.deepEqual(JSON.parse(response.body), {
-    title: 'There was a problem',
+    title: 'Gateway Timeout',
     status: 504,
-    detail: 'You can try again. If the problem persists, contact the service desk.',
+    detail: 'The backend service did not respond in time.',
     retriable: true,
     operation_id: traceId,
   });

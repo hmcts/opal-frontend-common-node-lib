@@ -28,8 +28,6 @@ type ProxyRequest = IncomingMessage & {
 };
 
 const NORMALISED_GATEWAY_STATUSES = new Set([502, 503, 504]);
-const OPAL_PROXY_ERROR_TITLE = 'There was a problem';
-const OPAL_PROXY_ERROR_DETAIL = 'You can try again. If the problem persists, contact the service desk.';
 const proxyStartTimes = new WeakMap<ProxyRequest, number>();
 const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT']);
 
@@ -63,6 +61,29 @@ function createProxyErrorResponse(
   operationId: string,
 ): ProxyErrorResponse {
   return { title, status, detail, retriable, operation_id: operationId };
+}
+
+/**
+ * Resolves the status-specific title used when rewriting upstream gateway failures.
+ */
+function getGatewayErrorTitle(statusCode: number): string {
+  if (statusCode === 502) {
+    return 'Bad Gateway';
+  }
+  if (statusCode === 503) {
+    return 'Service Unavailable';
+  }
+  return 'Gateway Timeout';
+}
+
+/**
+ * Resolves the status-specific detail used when the proxy creates a technical gateway error response.
+ */
+function getGatewayErrorDetail(statusCode: number): string {
+  if (statusCode === 502) {
+    return 'The backend service could not be reached.';
+  }
+  return 'The backend service did not respond in time.';
 }
 
 /**
@@ -195,8 +216,8 @@ function normaliseGatewayResponse(
   const operationId = resolveOperationId(req);
   const body = createProxyErrorResponse(
     statusCode,
-    OPAL_PROXY_ERROR_TITLE,
-    OPAL_PROXY_ERROR_DETAIL,
+    getGatewayErrorTitle(statusCode),
+    getGatewayErrorDetail(statusCode),
     statusCode !== 502,
     operationId,
   );
@@ -229,8 +250,8 @@ function sendNormalisedGatewayResponse(proxyRes: IncomingMessage, req: ProxyRequ
     res,
     createProxyErrorResponse(
       statusCode,
-      OPAL_PROXY_ERROR_TITLE,
-      OPAL_PROXY_ERROR_DETAIL,
+      getGatewayErrorTitle(statusCode),
+      getGatewayErrorDetail(statusCode),
       statusCode !== 502,
       resolveOperationId(req),
     ),
@@ -305,13 +326,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
           );
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(
-              504,
-              'Gateway Timeout',
-              'The backend service did not respond in time.',
-              true,
-              operationId,
-            ),
+            createProxyErrorResponse(504, getGatewayErrorTitle(504), getGatewayErrorDetail(504), true, operationId),
           );
           return;
         }
@@ -323,7 +338,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         );
         sendProxyErrorResponse(
           res,
-          createProxyErrorResponse(502, 'Bad Gateway', 'The backend service could not be reached.', false, operationId),
+          createProxyErrorResponse(502, getGatewayErrorTitle(502), getGatewayErrorDetail(502), false, operationId),
         );
       },
     },
