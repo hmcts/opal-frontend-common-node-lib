@@ -8,6 +8,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ### Changed
 - _Add entries here for each PR that changes public behavior, exports, or consumer configuration._
+- Treat `EPIPE` broken-pipe proxy failures as retryable gateway timeouts.
 - Add a configurable `user-state` route module for returning cached user state from the logged-in session.
 - BREAKING: `Routes.enableFor` consumers must provide `userStateConfiguration` when enabling common routes.
 - Add a reusable `redis` service for reading JSON object cache entries from the shared session Redis client at

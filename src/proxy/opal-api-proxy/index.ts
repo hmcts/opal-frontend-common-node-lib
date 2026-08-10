@@ -15,7 +15,7 @@ type ProxyErrorResponse = {
   retriable: boolean;
 };
 
-const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT']);
+const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT']);
 
 /**
  * Narrows the proxy error response target to an HTTP response before writing to it.
