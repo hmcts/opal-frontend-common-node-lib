@@ -82,10 +82,16 @@ function sendProxyErrorResponse(res: ServerResponse | Socket, body: ProxyErrorRe
   res.end(response);
 }
 
+/**
+ * Checks whether a parsed value is a plain object that can be inspected safely.
+ */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Identifies upstream OPAL problem responses that should pass through without rewriting.
+ */
 function isOpalProblemBody(value: unknown): boolean {
   return (
     isRecord(value) &&
@@ -95,6 +101,9 @@ function isOpalProblemBody(value: unknown): boolean {
   );
 }
 
+/**
+ * Parses a buffered upstream response body as JSON, returning null for non-JSON payloads.
+ */
 function parseJsonBuffer(responseBuffer: Buffer): unknown {
   try {
     return JSON.parse(responseBuffer.toString('utf8')) as unknown;
@@ -103,20 +112,32 @@ function parseJsonBuffer(responseBuffer: Buffer): unknown {
   }
 }
 
+/**
+ * Checks whether a Content-Type header represents JSON or a structured JSON media type.
+ */
 function isJsonContentType(value: string | string[] | undefined): boolean {
   const raw = Array.isArray(value) ? value[0] : value;
   const type = raw?.toLowerCase().split(';', 1)[0];
   return type === 'application/json' || Boolean(type?.startsWith('application/') && type.endsWith('+json'));
 }
 
+/**
+ * Extracts a safe error code for proxy failure logs without including the error message.
+ */
 function getErrorCode(error: unknown): string | undefined {
   return error instanceof Error ? (error as Error & { code?: string }).code : undefined;
 }
 
+/**
+ * Extracts a safe error type for proxy failure logs without including the error message.
+ */
 function getErrorType(error: unknown): string {
   return error instanceof Error ? error.name : typeof error;
 }
 
+/**
+ * Builds safe proxy failure metadata for logging without request bodies, headers, tokens, or user data.
+ */
 function createSafeProxyLogMetadata(
   req: ProxyRequest,
   opalApiTarget: string,
@@ -141,6 +162,9 @@ function createSafeProxyLogMetadata(
   };
 }
 
+/**
+ * Calculates elapsed proxy time from the request start captured in the proxyReq handler.
+ */
 function getElapsedMs(req: ProxyRequest): number {
   const startTime = proxyStartTimes.get(req);
   if (!startTime) {
@@ -149,6 +173,10 @@ function getElapsedMs(req: ProxyRequest): number {
   return Date.now() - startTime;
 }
 
+/**
+ * Rewrites upstream gateway errors with non-OPAL bodies into the OPAL proxy error contract.
+ * Existing OPAL problem responses pass through after response digest verification.
+ */
 function normaliseGatewayResponse(
   responseBuffer: Buffer,
   proxyRes: IncomingMessage,
@@ -183,6 +211,10 @@ function normaliseGatewayResponse(
   return normalisedResponse;
 }
 
+/**
+ * Immediately sends a normalised OPAL response for non-JSON upstream gateway failures.
+ * This avoids waiting indefinitely when a gateway sends error headers but never completes its body.
+ */
 function sendNormalisedGatewayResponse(proxyRes: IncomingMessage, req: ProxyRequest, res: ServerResponse): boolean {
   const statusCode = proxyRes.statusCode;
   if (
@@ -212,10 +244,10 @@ function sendNormalisedGatewayResponse(proxyRes: IncomingMessage, req: ProxyRequ
  * @param opalApiTarget Backend Opal API base URL.
  * @param logEnabled Whether to log the client IP address added to the backend request.
  * @param timeoutInMilliseconds Maximum time to wait for the backend proxy request before timing out.
- * Optional for backwards compatibility. Consumers should pass an environment-specific timeout where available.
+ * This is intentionally required so the consuming app owns environment-specific timeout configuration.
  * @returns Configured Express router that maps proxy timeout and transport failures without replaying requests.
  */
-const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilliseconds?: number) => {
+const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilliseconds: number) => {
   const router = Router();
 
   router.use(rawJson());
@@ -268,24 +300,24 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         const elapsedMs = getElapsedMs(req);
         if (isRetryableProxyError(error)) {
           logger.warn(
-            'Proxy timeout or transport failure when calling target service',
+            `Proxy timeout or transport failure when calling ${opalApiTarget}`,
             createSafeProxyLogMetadata(req, opalApiTarget, operationId, 504, true, elapsedMs, error),
           );
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(504, OPAL_PROXY_ERROR_TITLE, OPAL_PROXY_ERROR_DETAIL, true, operationId),
+            createProxyErrorResponse(504, 'Gateway Timeout', 'The backend service did not respond in time.', true, operationId),
           );
           return;
         }
 
         // Keep other proxy failures deterministic without telling the frontend to retry them.
         logger.error(
-          'Unexpected proxy failure when calling target service',
+          `Unexpected proxy failure when calling ${opalApiTarget}`,
           createSafeProxyLogMetadata(req, opalApiTarget, operationId, 502, false, elapsedMs, error),
         );
         sendProxyErrorResponse(
           res,
-          createProxyErrorResponse(502, OPAL_PROXY_ERROR_TITLE, OPAL_PROXY_ERROR_DETAIL, false, operationId),
+          createProxyErrorResponse(502, 'Bad Gateway', 'The backend service could not be reached.', false, operationId),
         );
       },
     },
