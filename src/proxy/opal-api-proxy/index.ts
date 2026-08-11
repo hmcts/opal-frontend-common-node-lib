@@ -426,4 +426,3 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
 };
 
 export default opalApiProxy;
-export { createSafeProxyLogMetadata, resolveOperationId };

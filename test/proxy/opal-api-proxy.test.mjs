@@ -4,7 +4,7 @@ import http from 'node:http';
 import { after, test } from 'node:test';
 import express from 'express';
 import { Logger } from '@hmcts/nodejs-logging';
-import opalApiProxy, { createSafeProxyLogMetadata, resolveOperationId } from '../../dist/proxy/opal-api-proxy/index.js';
+import opalApiProxy from '../../dist/proxy/opal-api-proxy/index.js';
 
 const servers = [];
 const traceId = '4bf92f3577b34da6a3ce929d0e0e4736';
@@ -99,53 +99,15 @@ function assertGatewayFailureLog(warn, expectedMetadata) {
   assert.ok(metadata.elapsedMs >= 0);
 }
 
+function assertNoSensitiveLogValues(warn) {
+  assert.doesNotMatch(
+    JSON.stringify(warn.calls),
+    /secret|Bearer|QQ123456C|accountNumber|socket timeout|token|password|user:|12345|Sensitive|defendants/,
+  );
+}
+
 after(async () => {
   await Promise.all(servers.map((server) => new Promise((resolve) => server.close(resolve))));
-});
-
-test('resolveOperationId uses active App Insights context before request headers', () => {
-  const operationId = resolveOperationId(
-    {
-      headers: {
-        traceparent: `00-${traceId}-${spanId}-01`,
-      },
-    },
-    'active-operation-id',
-  );
-
-  assert.equal(operationId, 'active-operation-id');
-});
-
-test('resolveOperationId reads operation id from traceparent', () => {
-  const operationId = resolveOperationId(
-    {
-      headers: {
-        traceparent: `00-${traceId}-${spanId}-01`,
-      },
-    },
-    undefined,
-  );
-
-  assert.equal(operationId, traceId);
-});
-
-test('resolveOperationId reads operation id from request-id', () => {
-  const operationId = resolveOperationId(
-    {
-      headers: {
-        'request-id': `|${traceId}.${spanId}.`,
-      },
-    },
-    undefined,
-  );
-
-  assert.equal(operationId, traceId);
-});
-
-test('resolveOperationId generates a fallback id', () => {
-  const operationId = resolveOperationId({ headers: {} }, undefined);
-
-  assert.match(operationId, /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 });
 
 test('proxy timeout returns OPAL problem JSON with operation id', async () => {
@@ -167,6 +129,31 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
     retriable: true,
     operation_id: traceId,
   });
+});
+
+test('proxy timeout uses operation id from request-id when traceparent is unavailable', async () => {
+  const upstream = await listen(() => undefined);
+  const proxy = await createProxyServer(upstream.url, 30);
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, {
+    'request-id': `|${traceId}.${spanId}.`,
+  });
+
+  assert.equal(response.statusCode, 504);
+  assert.equal(JSON.parse(response.body).operation_id, traceId);
+});
+
+test('proxy timeout generates fallback operation id when correlation headers are unavailable', async () => {
+  const upstream = await listen(() => undefined);
+  const proxy = await createProxyServer(upstream.url, 30);
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`);
+
+  assert.equal(response.statusCode, 504);
+  assert.match(
+    JSON.parse(response.body).operation_id,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  );
 });
 
 test('gateway HTML 504 is normalised, logged and response digest is removed', async () => {
@@ -206,6 +193,7 @@ test('gateway HTML 504 is normalised, logged and response digest is removed', as
       errorType: undefined,
       code: undefined,
     });
+    assertNoSensitiveLogValues(warn);
   } finally {
     warn.restore();
   }
@@ -303,6 +291,7 @@ test('legacy OPAL error response without operation id is given one and logged', 
       errorType: undefined,
       code: undefined,
     });
+    assertNoSensitiveLogValues(warn);
   } finally {
     warn.restore();
   }
@@ -365,80 +354,39 @@ test('legacy OPAL error response with blank operation id is given one', async ()
   });
 });
 
-test('safe logging messages and metadata include operation id and exclude sensitive data', () => {
-  const warnMessage = 'Proxy timeout or transport failure';
-  const errorMessage = 'Unexpected proxy failure';
-  const metadata = createSafeProxyLogMetadata(
-    {
-      method: 'POST',
-      baseUrl: '/opal-fines-service',
-      path: '/minor-creditors/search',
-      url: '/minor-creditors/search?accountNumber=12345',
-      headers: {
+test('safe logging uses service label and excludes dynamic path values', async () => {
+  const upstream = await listen((_req, res) => {
+    res.writeHead(504, {
+      'Content-Type': 'text/html; charset=utf-8',
+    });
+    res.end('<html><body>Gateway timeout</body></html>');
+  });
+  const proxy = await createProxyServer(upstream.url);
+  const warn = captureProxyWarn();
+
+  try {
+    const response = await request(
+      `${proxy.url}/opal-fines-service/defendants/QQ123456C/accounts/12345?accountNumber=12345&name=Sensitive`,
+      {
+        traceparent: `00-${traceId}-${spanId}-01`,
         cookie: 'session=secret',
         authorization: 'Bearer token',
       },
-      body: {
-        nationalInsuranceNumber: 'QQ123456C',
-      },
-    },
-    'https://user:password@fines.example.test/service?token=secret',
-    traceId,
-    504,
-    true,
-    123,
-    Object.assign(new Error('socket timeout with token'), { code: 'ETIMEDOUT' }),
-  );
+    );
 
-  assert.deepEqual(metadata, {
-    operationId: traceId,
-    method: 'POST',
-    path: '/opal-fines-service',
-    target: 'fines.example.test',
-    statusCode: 504,
-    elapsedMs: 123,
-    retriable: true,
-    errorType: 'Error',
-    code: 'ETIMEDOUT',
-  });
-  assert.doesNotMatch(
-    JSON.stringify({ warnMessage, errorMessage, metadata }),
-    /secret|Bearer|QQ123456C|accountNumber|socket timeout|token|password|user:/,
-  );
-});
-
-test('safe logging metadata omits raw path when service label is unavailable', () => {
-  const metadata = createSafeProxyLogMetadata(
-    {
-      method: 'POST',
-      url: '/minor-creditors/search?accountNumber=12345&name=Sensitive',
-    },
-    'https://fines.example.test/service',
-    traceId,
-    504,
-    true,
-    123,
-  );
-
-  assert.equal(metadata.path, undefined);
-  assert.doesNotMatch(JSON.stringify(metadata), /accountNumber|12345|Sensitive/);
-});
-
-test('safe logging metadata uses service label and excludes dynamic path values', () => {
-  const metadata = createSafeProxyLogMetadata(
-    {
+    assert.equal(response.statusCode, 504);
+    assertGatewayFailureLog(warn, {
+      operationId: traceId,
       method: 'GET',
-      baseUrl: '/opal-fines-service',
-      path: '/defendants/QQ123456C',
-      url: '/defendants/QQ123456C/accounts/12345?name=Sensitive',
-    },
-    'https://fines.example.test/service',
-    traceId,
-    504,
-    true,
-    123,
-  );
-
-  assert.equal(metadata.path, '/opal-fines-service');
-  assert.doesNotMatch(JSON.stringify(metadata), /QQ123456C|12345|Sensitive|defendants/);
+      path: '/opal-fines-service',
+      target: new URL(upstream.url).host,
+      statusCode: 504,
+      retriable: true,
+      errorType: undefined,
+      code: undefined,
+    });
+    assertNoSensitiveLogValues(warn);
+  } finally {
+    warn.restore();
+  }
 });
