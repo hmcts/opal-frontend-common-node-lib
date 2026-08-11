@@ -199,7 +199,7 @@ test('gateway HTML 504 is normalised, logged and response digest is removed', as
     assertGatewayFailureLog(warn, {
       operationId: traceId,
       method: 'GET',
-      path: '/minor-creditors',
+      path: '/opal-fines-service',
       target: new URL(upstream.url).host,
       statusCode: 504,
       retriable: true,
@@ -296,7 +296,7 @@ test('legacy OPAL error response without operation id is given one and logged', 
     assertGatewayFailureLog(warn, {
       operationId: traceId,
       method: 'GET',
-      path: '/minor-creditors',
+      path: '/opal-fines-service',
       target: new URL(upstream.url).host,
       statusCode: 504,
       retriable: true,
@@ -371,6 +371,7 @@ test('safe logging messages and metadata include operation id and exclude sensit
   const metadata = createSafeProxyLogMetadata(
     {
       method: 'POST',
+      baseUrl: '/opal-fines-service',
       path: '/minor-creditors/search',
       url: '/minor-creditors/search?accountNumber=12345',
       headers: {
@@ -392,7 +393,7 @@ test('safe logging messages and metadata include operation id and exclude sensit
   assert.deepEqual(metadata, {
     operationId: traceId,
     method: 'POST',
-    path: '/minor-creditors/search',
+    path: '/opal-fines-service',
     target: 'fines.example.test',
     statusCode: 504,
     elapsedMs: 123,
@@ -406,7 +407,7 @@ test('safe logging messages and metadata include operation id and exclude sensit
   );
 });
 
-test('safe logging metadata strips query criteria when request path is unavailable', () => {
+test('safe logging metadata omits raw path when service label is unavailable', () => {
   const metadata = createSafeProxyLogMetadata(
     {
       method: 'POST',
@@ -419,6 +420,25 @@ test('safe logging metadata strips query criteria when request path is unavailab
     123,
   );
 
-  assert.equal(metadata.path, '/minor-creditors/search');
+  assert.equal(metadata.path, undefined);
   assert.doesNotMatch(JSON.stringify(metadata), /accountNumber|12345|Sensitive/);
+});
+
+test('safe logging metadata uses service label and excludes dynamic path values', () => {
+  const metadata = createSafeProxyLogMetadata(
+    {
+      method: 'GET',
+      baseUrl: '/opal-fines-service',
+      path: '/defendants/QQ123456C',
+      url: '/defendants/QQ123456C/accounts/12345?name=Sensitive',
+    },
+    'https://fines.example.test/service',
+    traceId,
+    504,
+    true,
+    123,
+  );
+
+  assert.equal(metadata.path, '/opal-fines-service');
+  assert.doesNotMatch(JSON.stringify(metadata), /QQ123456C|12345|Sensitive|defendants/);
 });

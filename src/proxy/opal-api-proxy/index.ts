@@ -18,6 +18,7 @@ type ProxyErrorResponse = {
 };
 
 type ProxyRequest = IncomingMessage & {
+  baseUrl?: string;
   path?: string;
   body?: unknown;
   session?: {
@@ -165,15 +166,14 @@ function getErrorType(error: unknown): string {
 }
 
 /**
- * Resolves the request path for proxy logs without query strings or raw search criteria.
+ * Resolves the stable Express mount path for proxy logs without dynamic path values or search criteria.
  */
 function getSafeRequestPath(req: ProxyRequest): string | undefined {
-  const rawPath = req.path || req.url;
-  if (!rawPath) {
+  if (!req.baseUrl) {
     return undefined;
   }
 
-  return rawPath.split('?', 1)[0] || undefined;
+  return req.baseUrl.split('?', 1)[0] || undefined;
 }
 
 /**
