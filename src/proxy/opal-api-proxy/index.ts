@@ -2,19 +2,35 @@ import { Router } from 'express';
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 import { Logger } from '@hmcts/nodejs-logging';
 import { Socket } from 'node:net';
-import type { ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const logger = Logger.getLogger('opalApiProxy');
 import { rawJson, verifyContentDigest } from '../middlewares/digest-verify.middleware.js';
 import { verifyResponseDigest } from '../utils/response-digest.js';
+import { resolveOperationId } from '../utils/operation-id.js';
 
 type ProxyErrorResponse = {
   title: string;
   status: number;
   detail: string;
   retriable: boolean;
+  operation_id: string;
 };
 
+type ProxyRequest = IncomingMessage & {
+  baseUrl?: string;
+  path?: string;
+  body?: unknown;
+  session?: {
+    securityToken?: {
+      access_token?: string;
+    };
+  };
+};
+
+const NORMALISED_GATEWAY_STATUSES = new Set([502, 503, 504]);
+const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+const proxyStartTimes = new WeakMap<ProxyRequest, number>();
 const RETRYABLE_PROXY_ERROR_CODES = new Set(['ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT']);
 
 /**
@@ -44,8 +60,32 @@ function createProxyErrorResponse(
   title: string,
   detail: string,
   retriable: boolean,
+  operationId: string,
 ): ProxyErrorResponse {
-  return { title, status, detail, retriable };
+  return { title, status, detail, retriable, operation_id: operationId };
+}
+
+/**
+ * Resolves the status-specific title used when rewriting upstream gateway failures.
+ */
+function getGatewayErrorTitle(statusCode: number): string {
+  if (statusCode === 502) {
+    return 'Bad Gateway';
+  }
+  if (statusCode === 503) {
+    return 'Service Unavailable';
+  }
+  return 'Gateway Timeout';
+}
+
+/**
+ * Resolves the status-specific detail used when the proxy creates a technical gateway error response.
+ */
+function getGatewayErrorDetail(statusCode: number): string {
+  if (statusCode === 502) {
+    return 'The backend service could not be reached.';
+  }
+  return 'The backend service did not respond in time.';
 }
 
 /**
@@ -56,10 +96,244 @@ function sendProxyErrorResponse(res: ServerResponse | Socket, body: ProxyErrorRe
     return;
   }
 
+  const response = Buffer.from(JSON.stringify(body), 'utf8');
+
   res.statusCode = body.status;
-  res.setHeader('Content-Type', 'application/problem+json; charset=utf-8');
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
   res.setHeader('Cache-Control', 'no-store');
-  res.end(JSON.stringify(body));
+  res.setHeader('Content-Length', response.length.toString());
+  res.end(response);
+}
+
+/**
+ * Checks whether a parsed value is a plain object that can be inspected safely.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Identifies upstream OPAL problem responses that can either pass through or receive an operation id.
+ */
+function isOpalProblemBody(value: unknown): value is Record<string, unknown> {
+  return (
+    isRecord(value) &&
+    typeof value['title'] === 'string' &&
+    typeof value['status'] === 'number' &&
+    typeof value['detail'] === 'string'
+  );
+}
+
+/**
+ * Checks whether an upstream OPAL problem response already contains a usable operation id.
+ */
+function hasOperationId(value: Record<string, unknown>): value is Record<string, unknown> & { operation_id: string } {
+  return typeof value['operation_id'] === 'string' && value['operation_id'].trim().length > 0;
+}
+
+/**
+ * Parses a buffered upstream response body as JSON, returning null for non-JSON payloads.
+ */
+function parseJsonBuffer(responseBuffer: Buffer): unknown {
+  try {
+    return JSON.parse(responseBuffer.toString('utf8')) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks whether a Content-Type header represents JSON or a structured JSON media type.
+ */
+function isJsonContentType(value: string | string[] | undefined): boolean {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const type = raw?.toLowerCase().split(';', 1)[0];
+  return type === 'application/json' || Boolean(type?.startsWith('application/') && type.endsWith('+json'));
+}
+
+/**
+ * Extracts a safe error code for proxy failure logs without including the error message.
+ */
+function getErrorCode(error: unknown): string | undefined {
+  return error instanceof Error ? (error as Error & { code?: string }).code : undefined;
+}
+
+/**
+ * Extracts a safe error type for proxy failure logs without including the error message.
+ */
+function getErrorType(error: unknown): string {
+  return error instanceof Error ? error.name : typeof error;
+}
+
+/**
+ * Resolves the stable Express mount path for proxy logs without dynamic path values or search criteria.
+ */
+function getSafeRequestPath(req: ProxyRequest): string | undefined {
+  if (!req.baseUrl) {
+    return undefined;
+  }
+
+  return req.baseUrl.split('?', 1)[0] || undefined;
+}
+
+/**
+ * Builds safe proxy failure metadata for logging without request bodies, headers, tokens, or user data.
+ */
+function createSafeProxyLogMetadata(
+  req: ProxyRequest,
+  opalApiTarget: string,
+  operationId: string,
+  statusCode: number,
+  retriable: boolean,
+  elapsedMs: number,
+  error?: unknown,
+) {
+  const target = new URL(opalApiTarget);
+
+  return {
+    operationId,
+    method: req.method,
+    path: getSafeRequestPath(req),
+    target: target.host,
+    statusCode,
+    elapsedMs,
+    retriable,
+    errorType: error ? getErrorType(error) : undefined,
+    code: error ? getErrorCode(error) : undefined,
+  };
+}
+
+/**
+ * Calculates elapsed proxy time from the request start captured in the proxyReq handler.
+ */
+function getElapsedMs(req: ProxyRequest): number {
+  const startTime = proxyStartTimes.get(req);
+  if (!startTime) {
+    return 0;
+  }
+  return Date.now() - startTime;
+}
+
+/**
+ * Logs upstream gateway failures with the same safe metadata used by proxy timeout and transport failures.
+ */
+function logGatewayFailureResponse(
+  req: ProxyRequest,
+  opalApiTarget: string,
+  operationId: string,
+  statusCode: number,
+): void {
+  logger.warn(
+    'Proxy gateway failure response',
+    createSafeProxyLogMetadata(req, opalApiTarget, operationId, statusCode, statusCode !== 502, getElapsedMs(req)),
+  );
+}
+
+/**
+ * Injects a resolved operation id into a legacy upstream OPAL problem response and fixes response headers.
+ */
+function injectOperationId(
+  body: Record<string, unknown>,
+  res: ServerResponse,
+  statusCode: number,
+  operationId: string,
+): Buffer {
+  const response = Buffer.from(JSON.stringify({ ...body, operation_id: operationId }), 'utf8');
+
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Length', response.length.toString());
+  res.removeHeader('Content-Digest');
+
+  return response;
+}
+
+/**
+ * Rewrites upstream gateway errors with non-OPAL bodies into the OPAL proxy error contract.
+ * Existing OPAL problem responses pass through only when they already include an operation id.
+ */
+function normaliseGatewayResponse(
+  responseBuffer: Buffer,
+  proxyRes: IncomingMessage,
+  req: ProxyRequest,
+  res: ServerResponse,
+  opalApiTarget: string,
+): Buffer {
+  const statusCode = proxyRes.statusCode;
+  if (!statusCode || !NORMALISED_GATEWAY_STATUSES.has(statusCode)) {
+    return verifyResponseDigest(responseBuffer, proxyRes, res);
+  }
+
+  const verifiedResponse = verifyResponseDigest(responseBuffer, proxyRes, res);
+  if (verifiedResponse !== responseBuffer) {
+    return verifiedResponse;
+  }
+
+  const parsedResponse = parseJsonBuffer(verifiedResponse);
+  if (isOpalProblemBody(parsedResponse)) {
+    if (hasOperationId(parsedResponse)) {
+      logGatewayFailureResponse(req, opalApiTarget, parsedResponse.operation_id, statusCode);
+      return verifiedResponse;
+    }
+    const operationId = resolveOperationId(req);
+    logGatewayFailureResponse(req, opalApiTarget, operationId, statusCode);
+    return injectOperationId(parsedResponse, res, statusCode, operationId);
+  }
+
+  const operationId = resolveOperationId(req);
+  logGatewayFailureResponse(req, opalApiTarget, operationId, statusCode);
+  const body = createProxyErrorResponse(
+    statusCode,
+    getGatewayErrorTitle(statusCode),
+    getGatewayErrorDetail(statusCode),
+    statusCode !== 502,
+    operationId,
+  );
+  const normalisedResponse = Buffer.from(JSON.stringify(body), 'utf8');
+
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', PROBLEM_JSON_CONTENT_TYPE);
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Length', normalisedResponse.length.toString());
+  res.removeHeader('Content-Digest');
+
+  return normalisedResponse;
+}
+
+/**
+ * Immediately sends a normalised OPAL response for non-JSON upstream gateway failures.
+ * This avoids waiting indefinitely when a gateway sends error headers but never completes its body.
+ */
+function sendNormalisedGatewayResponse(
+  proxyRes: IncomingMessage,
+  req: ProxyRequest,
+  res: ServerResponse,
+  opalApiTarget: string,
+): boolean {
+  const statusCode = proxyRes.statusCode;
+  if (
+    !statusCode ||
+    !NORMALISED_GATEWAY_STATUSES.has(statusCode) ||
+    isJsonContentType(proxyRes.headers['content-type'])
+  ) {
+    return false;
+  }
+
+  const operationId = resolveOperationId(req);
+  logGatewayFailureResponse(req, opalApiTarget, operationId, statusCode);
+  sendProxyErrorResponse(
+    res,
+    createProxyErrorResponse(
+      statusCode,
+      getGatewayErrorTitle(statusCode),
+      getGatewayErrorDetail(statusCode),
+      statusCode !== 502,
+      operationId,
+    ),
+  );
+  proxyRes.destroy();
+  return true;
 }
 
 /**
@@ -76,8 +350,8 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
   router.use(rawJson());
   router.use(verifyContentDigest);
 
-  const handleProxyResponse = responseInterceptor(async (responseBuffer, proxyRes, _req, res) =>
-    verifyResponseDigest(responseBuffer, proxyRes, res),
+  const handleProxyResponse = responseInterceptor(async (responseBuffer, proxyRes, req, res) =>
+    normaliseGatewayResponse(responseBuffer, proxyRes, req, res, opalApiTarget),
   );
 
   const proxy = createProxyMiddleware({
@@ -86,10 +360,12 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
     proxyTimeout: timeoutInMilliseconds,
     selfHandleResponse: true,
     on: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      proxyReq: (proxyReq, req: any) => {
-        if (req.session.securityToken?.access_token) {
-          proxyReq.setHeader('Authorization', `Bearer ${req.session.securityToken.access_token}`);
+      proxyReq: (proxyReq, req) => {
+        const proxyRequest = req as ProxyRequest;
+        proxyStartTimes.set(proxyRequest, Date.now());
+
+        if (proxyRequest.session?.securityToken?.access_token) {
+          proxyReq.setHeader('Authorization', `Bearer ${proxyRequest.session.securityToken.access_token}`);
         }
 
         const forwardedForHeader = req.headers?.['x-forwarded-for'];
@@ -101,7 +377,7 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         }
         proxyReq.setHeader('Want-Content-Digest', 'sha-512');
 
-        const body = req.body;
+        const body = proxyRequest.body;
         const buffer = Buffer.isBuffer(body) ? body : null;
         if (buffer && buffer.length > 0) {
           proxyReq.setHeader('Content-Length', buffer.length.toString());
@@ -110,32 +386,35 @@ const opalApiProxy = (opalApiTarget: string, logEnabled: boolean, timeoutInMilli
         }
       },
       proxyRes: (proxyRes, req, res) => {
+        if (sendNormalisedGatewayResponse(proxyRes, req, res, opalApiTarget)) {
+          return;
+        }
         void handleProxyResponse(proxyRes, req, res);
       },
-      error: (error, _req, res) => {
+      error: (error, req, res) => {
         // Do not replay the request here: only the frontend knows whether it is safe to retry.
+        const operationId = resolveOperationId(req);
+        const elapsedMs = getElapsedMs(req);
         if (isRetryableProxyError(error)) {
-          logger.warn(`Proxy timeout or transport failure when calling ${opalApiTarget}`, {
-            target: opalApiTarget,
-            message: error.message,
-            code: (error as Error & { code?: string }).code,
-          });
+          logger.warn(
+            'Proxy timeout or transport failure',
+            createSafeProxyLogMetadata(req, opalApiTarget, operationId, 504, true, elapsedMs, error),
+          );
           sendProxyErrorResponse(
             res,
-            createProxyErrorResponse(504, 'Gateway Timeout', 'The backend service did not respond in time.', true),
+            createProxyErrorResponse(504, getGatewayErrorTitle(504), getGatewayErrorDetail(504), true, operationId),
           );
           return;
         }
 
         // Keep other proxy failures deterministic without telling the frontend to retry them.
-        logger.error(`Unexpected proxy failure when calling ${opalApiTarget}`, {
-          target: opalApiTarget,
-          message: error instanceof Error ? error.message : String(error),
-          code: error instanceof Error ? (error as Error & { code?: string }).code : undefined,
-        });
+        logger.error(
+          'Unexpected proxy failure',
+          createSafeProxyLogMetadata(req, opalApiTarget, operationId, 502, false, elapsedMs, error),
+        );
         sendProxyErrorResponse(
           res,
-          createProxyErrorResponse(502, 'Bad Gateway', 'The backend service could not be reached.', false),
+          createProxyErrorResponse(502, getGatewayErrorTitle(502), getGatewayErrorDetail(502), false, operationId),
         );
       },
     },

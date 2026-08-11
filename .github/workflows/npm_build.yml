@@ -39,6 +39,9 @@ jobs:
       - name: Build library
         run: yarn build
 
+      - name: Run tests
+        run: LOG_LEVEL=OFF node --test test/proxy/*.test.mjs
+
       - name: Validate export targets exist
         run: yarn check:exports
 

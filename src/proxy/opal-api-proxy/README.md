@@ -43,8 +43,9 @@ transport failure, the proxy returns the following response:
 {
   "title": "Gateway Timeout",
   "status": 504,
-  "detail": "The upstream service did not respond in time.",
-  "retriable": true
+  "detail": "The backend service did not respond in time.",
+  "retriable": true,
+  "operation_id": "<operation-id>"
 }
 ```
 
