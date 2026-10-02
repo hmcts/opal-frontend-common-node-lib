@@ -99,7 +99,7 @@
     "check:exports": "node scripts/validate-export-targets.cjs",
     "check:pack-shape": "node scripts/validate-pack-shape.cjs",
     "check:exports:esm": "node scripts/smoke-test-exports.mjs",
-    "test": "yarn build && LOG_LEVEL=OFF node --test test/proxy/*.test.mjs",
+    "test": "yarn build && LOG_LEVEL=OFF node --test test/app-insights/*.test.mjs test/proxy/*.test.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ./src --ext .ts && yarn prettier",
     "prettier": "prettier --check \"./src/**/*.{ts,js,json}\"",

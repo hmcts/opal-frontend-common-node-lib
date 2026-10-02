@@ -5,6 +5,19 @@ It applies a timeout to the upstream connection, but it never retries a request.
 Only the consuming opal-frontend can decide whether replaying its original request is
 safe.
 
+## Distributed tracing
+
+When the consuming Node server enables `AppInsights`, this library configures the
+Application Insights SDK for both legacy Application Insights correlation and W3C
+trace context. The SDK therefore accepts an incoming `traceparent` header and
+creates a child `traceparent` header for the proxy's outbound HTTP request.
+
+The proxy does not replace a valid header supplied by the browser. Requests that
+start on the server, including SSR requests, are correlated from the active
+server-side Application Insights request context instead. This makes the
+frontend, proxy, and downstream service telemetry part of the same operation when
+each service has compatible Application Insights/OpenTelemetry instrumentation.
+
 ## Timeout configuration
 
 `DEFAULT_PROXY_CONFIG.timeoutInMilliseconds` is intentionally `null`. The common node library does not own an
