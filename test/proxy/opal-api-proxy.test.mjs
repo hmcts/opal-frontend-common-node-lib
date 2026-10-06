@@ -131,7 +131,7 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
   });
 });
 
-test('proxy preserves an incoming W3C traceparent header for the upstream service', async () => {
+test('proxy forwards an incoming W3C traceparent header when Application Insights is not enabled', async () => {
   let upstreamTraceparent;
   const upstream = await listen((req, res) => {
     upstreamTraceparent = req.headers.traceparent;

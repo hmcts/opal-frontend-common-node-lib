@@ -9,14 +9,16 @@ safe.
 
 When the consuming Node server enables `AppInsights`, this library configures the
 Application Insights SDK for both legacy Application Insights correlation and W3C
-trace context. The SDK therefore accepts an incoming `traceparent` header and
-creates a child `traceparent` header for the proxy's outbound HTTP request.
+trace context. The SDK accepts an incoming browser `traceparent` header and
+derives a child `traceparent` header for the proxy's outbound HTTP dependency.
+The child header has the same trace ID and a new span ID; it is not an unchanged
+copy of the browser header.
 
-The proxy does not replace a valid header supplied by the browser. Requests that
-start on the server, including SSR requests, are correlated from the active
-server-side Application Insights request context instead. This makes the
-frontend, proxy, and downstream service telemetry part of the same operation when
-each service has compatible Application Insights/OpenTelemetry instrumentation.
+Requests that start on the server, including SSR requests, are correlated from
+the active server-side Application Insights request context instead. This makes
+the frontend, proxy, and downstream service telemetry part of the same operation
+when each service has compatible Application Insights/OpenTelemetry
+instrumentation.
 
 ## Timeout configuration
 
