@@ -131,6 +131,22 @@ test('proxy timeout returns OPAL problem JSON with operation id', async () => {
   });
 });
 
+test('proxy forwards an incoming W3C traceparent header when Application Insights is not enabled', async () => {
+  let upstreamTraceparent;
+  const upstream = await listen((req, res) => {
+    upstreamTraceparent = req.headers.traceparent;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end('{}');
+  });
+  const proxy = await createProxyServer(upstream.url);
+  const traceparent = `00-${traceId}-${spanId}-01`;
+
+  const response = await request(`${proxy.url}/opal-fines-service/minor-creditors`, { traceparent });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(upstreamTraceparent, traceparent);
+});
+
 test('proxy timeout uses operation id from request-id when traceparent is unavailable', async () => {
   const upstream = await listen(() => undefined);
   const proxy = await createProxyServer(upstream.url, 30);

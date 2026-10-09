@@ -40,7 +40,7 @@ jobs:
         run: yarn build
 
       - name: Run tests
-        run: LOG_LEVEL=OFF node --test test/proxy/*.test.mjs
+        run: LOG_LEVEL=OFF node --test test/app-insights/*.test.mjs test/proxy/*.test.mjs
 
       - name: Validate export targets exist
         run: yarn check:exports
