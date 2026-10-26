@@ -7,6 +7,8 @@ The format is based on Keep a Changelog and this project follows semantic versio
 ## [Unreleased]
 
 ### Changed
+- Add `opalFileHandlingServiceUrl` to `ProxyConfiguration` and its defaults, with an initial value of `null`.
+  Consumers constructing configuration literals must include this field or spread `DEFAULT_PROXY_CONFIG`.
 - _Add entries here for each PR that changes public behavior, exports, or consumer configuration._
 - Add operation IDs to `OpalApiProxy` timeout and gateway failure responses so frontend users receive a support error
   code.

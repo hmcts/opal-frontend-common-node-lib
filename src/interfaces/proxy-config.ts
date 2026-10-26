@@ -2,6 +2,7 @@ class ProxyConfiguration {
   opalFinesServiceUrl: string | null = null;
   opalUserServiceUrl: string | null = null;
   opalRmServiceUrl: string | null = null;
+  opalFileHandlingServiceUrl: string | null = null;
   timeoutInMilliseconds: number | null = null;
 
   constructor(initialValues?: Partial<ProxyConfiguration>) {
