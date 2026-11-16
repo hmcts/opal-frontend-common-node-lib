@@ -175,6 +175,10 @@ import {
 
 Refer to the `exports` block in `package.json` for the full list of available modules.
 
+## Dynatrace SSR helper
+
+`@hmcts/opal-frontend-common-node/dynatrace` exports `addDynatraceScript(document, { enabled, scriptUrl })` and `getDynatraceScriptUrl(configuration)`. Applications opt in explicitly. The helper accepts a complete HTTPS `.js` URL on a `dynatrace.com` subdomain, escapes it for HTML, and inserts an asynchronous script at the start of `<head>` with `crossorigin="anonymous"`. Disabled, missing, or invalid configuration returns the original document. It does not enable or disable monitoring; applications can add that control separately when needed.
+
 ## Commonly Used Commands
 
 The following commands are available in the `package.json`:
