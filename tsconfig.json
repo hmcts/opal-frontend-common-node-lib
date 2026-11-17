@@ -33,6 +33,9 @@
       "@hmcts/opal-frontend-common-node/constants": [
         "./src/constants/index.ts",
       ],
+      "@hmcts/opal-frontend-common-node/dynatrace": [
+        "./src/dynatrace/index.ts",
+      ],
       "@hmcts/opal-frontend-common-node/interfaces/*": [
         "./src/interfaces/*",
       ],

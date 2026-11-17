@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ## [Unreleased]
 
+### Added
+- Add the optional `dynatrace` export for validating an environment-specific script URL and inserting a nonblocking
+  script into an SSR document. Existing consumers are unaffected unless they call the helper.
+
 ### Changed
 - Add `opalFileHandlingServiceUrl` to `ProxyConfiguration` and its defaults, with an initial value of `null`.
   Consumers constructing configuration literals must include this field or spread `DEFAULT_PROXY_CONFIG`.
